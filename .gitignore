@@ -1,0 +1,27 @@
+# Visual Studio
+.vs/
+*.user
+
+# Carpetas de compilación.
+# Los *.obj de compilación quedan excluidos aquí, dentro de estas carpetas.
+# NO agregar un "*.obj" global: los modelos de assets/models/ sí se suben.
+[Xx]64/
+[Xx]86/
+[Dd]ebug/
+[Rr]elease/
+
+# Artefactos de compilación
+*.pdb
+*.ilk
+*.ipch
+
+# Respaldos de Blender
+*.blend1
+*.blend2
+
+# Archivos del sistema
+Thumbs.db
+desktop.ini
+
+# Hoja de contribuciones: contiene números de cuenta
+*[Cc]ontribuciones*.xlsx
