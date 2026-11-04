@@ -1,0 +1,22 @@
+# Blender 5.2.2 LTS MTL File: 'Globo.blend'
+# www.blender.org
+
+newmtl Globo_Azul
+Ns 422.499969
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 2 1 1 textures/textura_globo_azul.jpg
+
+newmtl Palo_Blanco
+Ns 159.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 1 3 1 textures/textura_palo_blanco.jpg

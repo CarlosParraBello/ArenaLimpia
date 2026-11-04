@@ -1,0 +1,22 @@
+# Blender 5.2.2 LTS MTL File: 'MesaJugadores.blend'
+# www.blender.org
+
+newmtl Metal_Azul
+Ns 422.499969
+Ka 0.600000 0.600000 0.600000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd -o 0.5 0.5 0.5 -s 0.55 0.55 0.55 textures/banca_azul.jpg
+
+newmtl Metal_Blanco
+Ns 360.000000
+Ka 0.300000 0.300000 0.300000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd -s 1.5 1.5 1.5 textures/banca_blanco.jpg
