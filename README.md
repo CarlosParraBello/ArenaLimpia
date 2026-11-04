@@ -96,8 +96,7 @@ shaders/          shaders .vs / .fs
 assets/models/    un .blend por modelo y su exportación .obj/.mtl, en una carpeta por integrante
 assets/textures/  texturas
 assets/skybox/    imágenes del skybox
-tools/            scripts de Blender (exportar a OBJ)
-blender/          archivos .blend fuente
+tools/            scripts (exportar de Blender a OBJ, convertir panorámicas a cubemap)
 docs/             reporte, bitácora y documentación
 docs/capturas/    capturas de pantalla
 installer/        proyecto de InstallForge
