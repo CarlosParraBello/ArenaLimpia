@@ -13,7 +13,7 @@
 - [ ] Materiales traslúcidos
 - [ ] Materiales metálicos
 - [ ] 2 técnicas de iluminación
-- [ ] 1 mapeo de ambiente (skybox/cubemap)
+- [x] 1 mapeo de ambiente (skybox/cubemap): `assets/skybox/mondello/`
 - [ ] Texturizado de modelos
 - [ ] Texturizado de ambiente
 

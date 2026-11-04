@@ -252,12 +252,12 @@ bool Start()
     skyboxShader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
 
     std::vector<std::string> faces = {
-        "assets/skybox/playa_temporal/posx.png",
-        "assets/skybox/playa_temporal/negx.png",
-        "assets/skybox/playa_temporal/posy.png",
-        "assets/skybox/playa_temporal/negy.png",
-        "assets/skybox/playa_temporal/posz.png",
-        "assets/skybox/playa_temporal/negz.png"
+        "assets/skybox/mondello/posx.png",
+        "assets/skybox/mondello/negx.png",
+        "assets/skybox/mondello/posy.png",
+        "assets/skybox/mondello/negy.png",
+        "assets/skybox/mondello/posz.png",
+        "assets/skybox/mondello/negz.png"
     };
     skybox = new CubeMap();
     skybox->loadCubemap(faces);
