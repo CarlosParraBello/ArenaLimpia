@@ -5,6 +5,7 @@
 # Carpetas de compilación.
 # Los *.obj de compilación quedan excluidos aquí, dentro de estas carpetas.
 # NO agregar un "*.obj" global: los modelos de assets/models/ sí se suben.
+build/
 [Xx]64/
 [Xx]86/
 [Dd]ebug/

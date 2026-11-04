@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{6f3c2a1e-8b4d-4c7a-9e21-5a0d7c3b9f10}</ProjectGuid>
+    <RootNamespace>ArenaLimpia</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <!-- Usa el compilador de la versión de Visual Studio instalada (2022 o 2026) -->
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+
+  <!-- Rutas relativas: el repositorio debe estar en src\ArenaLimpia, junto a src\deps y src\bin del curso -->
+  <PropertyGroup Label="UserMacros">
+    <RepoDir>$(MSBuildThisFileDirectory)</RepoDir>
+    <DepsDir>$(MSBuildThisFileDirectory)..\deps\</DepsDir>
+    <CourseBinDir>$(MSBuildThisFileDirectory)..\bin\</CourseBinDir>
+    <LibConfig>$(Configuration)</LibConfig>
+    <AssimpLib Condition="'$(Configuration)'=='Debug'">assimp-vc143-mtd</AssimpLib>
+    <AssimpLib Condition="'$(Configuration)'=='Release'">assimp-vc143-mt</AssimpLib>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(RepoDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(RepoDir)build\obj\$(Configuration)\</IntDir>
+    <TargetName>ArenaLimpia</TargetName>
+    <LocalDebuggerWorkingDirectory>$(RepoDir)</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <!-- 4996: stb_image usa fopen; 4244/4267: conversiones de tamaño en los headers del curso -->
+      <DisableSpecificWarnings>4996;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(RepoDir)include;$(DepsDir)assimp\MSVC2022\include;$(DepsDir)glad\MSVC2022\include;$(DepsDir)glfw\MSVC2022\include;$(DepsDir)glm\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <!-- 4099: las bibliotecas del curso no traen sus .pdb -->
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(DepsDir)assimp\MSVC2022\lib\x64\$(LibConfig);$(DepsDir)glfw\MSVC2022\lib\x64\$(LibConfig);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;$(AssimpLib).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\stb_image.cpp" />
+    <!-- glad se compila aquí: la glad.lib Release del curso usa otra versión del compilador -->
+    <ClCompile Include="$(DepsDir)glad\MSVC2022\src\glad.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\camera.h" />
+    <ClInclude Include="include\cubemap.h" />
+    <ClInclude Include="include\mesh.h" />
+    <ClInclude Include="include\model.h" />
+    <ClInclude Include="include\modelstructs.h" />
+    <ClInclude Include="include\shader_m.h" />
+    <ClInclude Include="include\stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\phong.vs" />
+    <None Include="shaders\phong.fs" />
+    <None Include="shaders\skybox.vs" />
+    <None Include="shaders\skybox.fs" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!-- Copia la DLL de Assimp del curso (src\bin) junto al ejecutable -->
+  <Target Name="CopiarDllAssimp" AfterTargets="Build">
+    <Copy SourceFiles="$(CourseBinDir)$(AssimpLib).dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(CourseBinDir)$(AssimpLib).dll')" />
+    <Warning Text="No se encontró $(CourseBinDir)$(AssimpLib).dll; cópiala junto a ArenaLimpia.exe." Condition="!Exists('$(CourseBinDir)$(AssimpLib).dll')" />
+  </Target>
+</Project>
