@@ -27,21 +27,20 @@ Sostenible de la Agenda 2030 de la ONU:
 
 ## Cómo compilar
 
-> Todavía no hay código ni solución de Visual Studio. Esta sección se completará cuando se
-> agreguen.
-
-1. Instala Visual Studio con la carga de trabajo **Desarrollo para el escritorio con C++**.
+1. Instala Visual Studio 2022 o 2026 con la carga de trabajo **Desarrollo para el escritorio
+   con C++**.
 2. Instala [Git LFS](https://git-lfs.com) y actívalo una vez en tu equipo:
 
    ```
    git lfs install
    ```
 
-3. Clona el repositorio dentro de la carpeta `src` del curso, junto a `deps`:
+3. Clona el repositorio dentro de la carpeta `src` del curso, junto a `deps` y `bin`:
 
    ```
    src/
    ├── deps/          GLFW, GLAD, GLM y Assimp del curso
+   ├── bin/           ejecutables del curso (de aquí se copia la DLL de Assimp)
    └── ArenaLimpia/   este repositorio
    ```
 
@@ -49,20 +48,55 @@ Sostenible de la Agenda 2030 de la ONU:
    git clone https://github.com/CarlosParraBello/ArenaLimpia.git
    ```
 
-4. Abre la solución en Visual Studio y selecciona la plataforma **x64**.
-5. Configura las dependencias con rutas relativas a la solución, por ejemplo
-   `$(SolutionDir)..\deps\glfw\MSVC2022\include`.
-6. Compila y ejecuta.
+4. Abre `ArenaLimpia.slnx` en Visual Studio y selecciona la plataforma **x64**.
+5. Compila y ejecuta con **F5**. No hay que configurar nada: el proyecto busca las
+   dependencias en `..\deps` con rutas relativas, y al compilar copia
+   `assimp-vc143-mt(d).dll` desde `..\bin` junto al ejecutable.
+
+El ejecutable queda en `build\Debug\` o `build\Release\` (carpeta ignorada por git). Al
+arrancar busca `shaders/` y `assets/` en la carpeta actual o en las carpetas superiores a la
+del ejecutable, así que funciona desde Visual Studio y con doble clic.
+
+### Controles
+
+| Tecla | Acción |
+|---|---|
+| W A S D | Mover la cámara |
+| Espacio / C | Subir / bajar |
+| Shift | Moverse más rápido |
+| Mouse / rueda | Mirar alrededor / zoom |
+| Tab | Mostrar u ocultar el cursor |
+| M / N | Malla de alambre / relleno |
+| F12 | Captura de pantalla en `docs/capturas/` |
+| Esc | Salir |
+
+### Agregar un modelo a la escena
+
+1. Guarda el `.blend` en `assets/models/<TuCarpeta>/<Modelo>/<Modelo>.blend`, con las
+   texturas empaquetadas (**Archivo → Externos → Empaquetar recursos**).
+2. Expórtalo a OBJ con el script del repositorio (ejecutarlo desde la raíz del repositorio):
+
+   ```
+   "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b --factory-startup --python tools/exportar_obj.py -- <TuCarpeta>
+   ```
+
+   Genera `<Modelo>.obj`, `<Modelo>.mtl` y `textures/` junto al `.blend`. No uses FBX: el
+   FBX de Blender 4.1 o posterior llega a Assimp sin normales.
+3. Agrega una línea a `sceneObjects` en `src/main.cpp` con la ruta del `.obj`, la
+   posición, la rotación y la escala. El modelo se apoya solo sobre la arena.
+4. Regístralo en [docs/modelos.md](docs/modelos.md).
 
 ## Estructura de carpetas
 
 ```
-src/              código C++
-include/          headers propios y de terceros (glad, glm, stb)
+ArenaLimpia.slnx  solución de Visual Studio
+src/              código C++ (main.cpp)
+include/          clases del curso (shader, cámara, modelo, cubemap) y stb_image
 shaders/          shaders .vs / .fs
-assets/models/    modelos exportados (.obj/.fbx/.gltf)
+assets/models/    un .blend por modelo y su exportación .obj/.mtl, en una carpeta por integrante
 assets/textures/  texturas
 assets/skybox/    imágenes del skybox
+tools/            scripts de Blender (exportar a OBJ)
 blender/          archivos .blend fuente
 docs/             reporte, bitácora y documentación
 docs/capturas/    capturas de pantalla
