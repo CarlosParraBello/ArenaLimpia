@@ -9,7 +9,7 @@ Los modelos de otros autores o generados con IA deben indicar su fuente original
 - **Vértices y caras:** suma de las piezas, sin aplicar modificadores.
 - **Texturas:** imágenes que usan sus materiales dentro del `.blend`.
 - **Material:** opaco, plástico, traslúcido o metálico.
-- **Origen:** propio, mixto o propio con apoyo de IA (se indica en qué), o externo con su fuente.
+- **Origen:** propio, mixto (con apoyo de IA; ver "Uso de IA") o externo con su fuente.
 - Las rutas son relativas a `assets/models/`.
 
 Actualizado el 2026-11-04.
@@ -53,20 +53,20 @@ Actualizado el 2026-11-04.
 | 24 | Taza de café | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 3 | 416 | 356 | 0 |  | Propio |
 | 25 | Plato | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 1 | 96 | 50 | 0 |  | Propio |
 | 26 | Trofeo | Carlos Parra | `CarlosParra/Trofeo/Trofeo.blend` | 5 | 169 | 124 | 1 |  | Propio |
-| 27 | Árbitro | Gabriel Yukio | `GabrielYukioayax/Arbitro/Arbitro.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 28 | Entrenador | Gabriel Yukio | `GabrielYukioayax/Entrenador/Entrenador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 29 | Espectador | Gabriel Yukio | `GabrielYukioayax/Espectador/Espectador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 30 | Espectadora | Gabriel Yukio | `GabrielYukioayax/Espectadora/Espectadora.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 31 | Jugador de México | Gabriel Yukio | `GabrielYukioayax/JugadorMX/jugadormx.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 32 | Jugador de Perú | Gabriel Yukio | `GabrielYukioayax/JugadorPR/jugadorperu.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 33 | Jugadora de Holanda | Gabriel Yukio | `GabrielYukioayax/JugadoraHA/jugadoraholanda.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 34 | Jugadora de Japón | Gabriel Yukio | `GabrielYukioayax/JugadoraJA/jugadorajapon.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 35 | Niña | Gabriel Yukio | `GabrielYukioayax/Nina/Nina.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 36 | Niño | Gabriel Yukio | `GabrielYukioayax/Nino/Nino.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 37 | Salvavidas | Gabriel Yukio | `GabrielYukioayax/Salvavidas/Salvavidas.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
-| 38 | Balón de fútbol | Gabriel Yukio | `GabrielYukioayax/BalonFutbol/BalonFutbol.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
-| 39 | Pelota de playa | Gabriel Yukio | `GabrielYukioayax/BalonPlaya/BalonPlaya.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
-| 40 | Balón de voleibol | Gabriel Yukio | `GabrielYukioayax/BalonVoley/BalonVoley.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
+| 27 | Árbitro | Gabriel Yukio | `GabrielYukioayax/Arbitro/Arbitro.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 28 | Entrenador | Gabriel Yukio | `GabrielYukioayax/Entrenador/Entrenador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 29 | Espectador | Gabriel Yukio | `GabrielYukioayax/Espectador/Espectador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 30 | Espectadora | Gabriel Yukio | `GabrielYukioayax/Espectadora/Espectadora.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 31 | Jugador de México | Gabriel Yukio | `GabrielYukioayax/JugadorMX/jugadormx.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 32 | Jugador de Perú | Gabriel Yukio | `GabrielYukioayax/JugadorPR/jugadorperu.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 33 | Jugadora de Holanda | Gabriel Yukio | `GabrielYukioayax/JugadoraHA/jugadoraholanda.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 34 | Jugadora de Japón | Gabriel Yukio | `GabrielYukioayax/JugadoraJA/jugadorajapon.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 35 | Niña | Gabriel Yukio | `GabrielYukioayax/Nina/Nina.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 36 | Niño | Gabriel Yukio | `GabrielYukioayax/Nino/Nino.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 37 | Salvavidas | Gabriel Yukio | `GabrielYukioayax/Salvavidas/Salvavidas.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto |
+| 38 | Balón de fútbol | Gabriel Yukio | `GabrielYukioayax/BalonFutbol/BalonFutbol.blend` | 1 | 482 | 512 | 1 | Plástico | Mixto |
+| 39 | Pelota de playa | Gabriel Yukio | `GabrielYukioayax/BalonPlaya/BalonPlaya.blend` | 1 | 482 | 512 | 1 | Plástico | Mixto |
+| 40 | Balón de voleibol | Gabriel Yukio | `GabrielYukioayax/BalonVoley/BalonVoley.blend` | 1 | 482 | 512 | 1 | Plástico | Mixto |
 | 41 | Aro salvavidas | Gabriel Yukio | `GabrielYukioayax/AroSalvavidas/AroSalvavidas.blend` | 1 | 576 | 576 | 1 | Plástico | Propio |
 | 42 | Aro salvavidas de niño | Gabriel Yukio | `GabrielYukioayax/AroSalvavidasNino/AroSalvavidasNino.blend` | 1 | 3456 | 3456 | 1 | Plástico | Propio |
 | 43 | Letrero de bienvenida | Gabriel Yukio | `GabrielYukioayax/Bienvenida/Bienvenida.blend` | 1 | 136 | 74 | 1 | Opaco | Propio |
@@ -127,7 +127,7 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
   ayuda de IA, mediante scripts de Python ejecutados y ajustados por el autor, se hizo un
   retoque de volumen del torso y se creó el esqueleto con pesos automáticos. El texturizado
   (ropa, colores, pelo, piel) y las variantes de cada personaje son del autor.
-- **Balones (Propio con apoyo de IA):** la malla es del autor; la textura se generó con un
+- **Balones (Mixto):** la malla es del autor; la textura se generó con un
   script de Python con ayuda de IA.
 
 ## Pendientes de revisión
