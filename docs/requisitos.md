@@ -20,7 +20,13 @@
 ## Animaciones
 
 - [ ] 10 animaciones simples
-- [ ] 5 animaciones por keyframes
+- [x] 5 animaciones por keyframes (esqueleto, `tools/animar_personajes.py`):
+  1. Caminar: jugadores, al moverse en tercera persona
+  2. Saque: jugadores, tecla Q
+  3. Remate: jugadores, tecla E (con salto)
+  4. Festejo: jugadores, tecla F
+  5. Marcar: árbitro, cada 8 s
+  - Extra: Parado (todos los personajes animados, en reposo)
 - [ ] 5 animaciones procedurales
 
 ## Entregables

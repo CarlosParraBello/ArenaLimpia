@@ -22,6 +22,7 @@
 *   Mouse          girar la cámara alrededor del jugador
 *   Rueda          acercar / alejar
 *   1 2 3 4        elegir jugador (MX, PR, HA, JA)
+*   Q / E / F      saque / remate / festejo
 *
 *   Generales:
 *   Tab            mostrar / ocultar el cursor
@@ -33,7 +34,7 @@
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
 *   --camara x y z yaw pitch  posición y orientación inicial de la cámara
 *   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
-*   --caminando <s>           fija la pose de "Caminar" en el segundo s (personajes animados)
+*   --pose <anim> <s>         fija la animación <anim> en el segundo s en los personajes que la tengan
 */
 
 #include <iostream>
@@ -155,6 +156,8 @@ struct SceneObject {
     int   animIdle = -1, animWalk = -1;
     float animTime = 0.0f;   // segundos dentro de la animación actual
     float speed    = 0.0f;   // m/s en este cuadro (0 = parado)
+    int   oneShot  = -1;     // animación que se reproduce una vez (saque, remate...) o -1
+    float oneShotTime = 0.0f;
     glm::vec3 boundsMin = glm::vec3(0.0f);
     glm::vec3 boundsMax = glm::vec3(0.0f);
 };
@@ -249,7 +252,8 @@ std::vector<SceneObject> sceneObjects = {
 
 // Modo de captura para pruebas automáticas
 std::string capturePath;
-float forcedWalkTime = -1.0f;   // --caminando <s>: fija la pose de caminar (para capturas)
+std::string forcedAnim;          // --pose <anim> <s>: fija una animación (para capturas)
+float forcedAnimTime = 0.0f;
 int frameCount = 0;
 
 // ---------------------------------------------------------------------------
@@ -266,8 +270,10 @@ int main(int argc, char** argv)
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
         }
-        else if (arg == "--caminando" && i + 1 < argc)
-            forcedWalkTime = std::stof(argv[++i]);
+        else if (arg == "--pose" && i + 2 < argc) {
+            forcedAnim = argv[++i];
+            forcedAnimTime = std::stof(argv[++i]);
+        }
         else if (arg == "--tercera") {
             cameraMode = CameraMode::ThirdPerson;
             if (i + 1 < argc && argv[i + 1][0] >= '1' && argv[i + 1][0] <= '4')
@@ -480,14 +486,41 @@ void drawObject(const SceneObject& obj)
 // Elige "Caminar" o "Parado" según la velocidad y avanza el tiempo de la animación.
 // Al caminar, la animación va al ritmo de los pasos para que los pies no se resbalen.
 
+// Inicia una animación que se reproduce una sola vez y luego regresa a "Parado".
+// Devuelve false si el personaje no la tiene o ya está en otra.
+bool playOneShot(SceneObject& obj, const std::string& name)
+{
+    if (!obj.skinned || obj.oneShot >= 0) return false;
+    int anim = obj.skinned->findAnimation(name);
+    if (anim < 0) return false;
+    obj.oneShot = anim;
+    obj.oneShotTime = 0.0f;
+    return true;
+}
+
 void animateCharacter(SceneObject& obj, float dt)
 {
     SkinnedModel* sk = obj.skinned;
     if (!sk) return;
 
-    if (forcedWalkTime >= 0.0f && obj.animWalk >= 0) {
-        sk->setPose(obj.animWalk, forcedWalkTime);
-        return;
+    if (!forcedAnim.empty()) {
+        int anim = sk->findAnimation(forcedAnim);
+        if (anim >= 0) {
+            sk->setPose(anim, forcedAnimTime);
+            return;
+        }
+    }
+
+    // Animación de una sola vez: al terminar se regresa a "Parado"
+    if (obj.oneShot >= 0) {
+        obj.oneShotTime += dt;
+        float length = sk->duration(obj.oneShot);
+        if (obj.oneShotTime < length) {
+            sk->setPose(obj.oneShot, obj.oneShotTime);
+            return;
+        }
+        obj.oneShot = -1;
+        obj.animTime = 0.0f;
     }
 
     bool walking = obj.speed > 0.05f && obj.animWalk >= 0;
@@ -499,6 +532,20 @@ void animateCharacter(SceneObject& obj, float dt)
     else
         obj.animTime += dt;
     sk->setPose(anim, obj.animTime);
+}
+
+// El árbitro marca un punto cada cierto tiempo
+SceneObject* findObject(const std::string& name);
+const float REFEREE_INTERVAL = 8.0f;
+float refereeTimer = 3.0f;
+
+void updateReferee(float dt)
+{
+    refereeTimer -= dt;
+    if (refereeTimer > 0.0f) return;
+    refereeTimer = REFEREE_INTERVAL;
+    if (SceneObject* referee = findObject("Arbitro"))
+        playOneShot(*referee, "Marcar");
 }
 
 // ---------------------------------------------------------------------------
@@ -547,7 +594,7 @@ void placeOrbitBehindPlayer()
 void movePlayer(GLFWwindow* window)
 {
     SceneObject* player = followedObject();
-    if (!player) return;
+    if (!player || player->oneShot >= 0) return;   // no camina mientras saca o remata
 
     // Adelante = hacia donde mira la cámara, proyectado en el piso
     float yaw = glm::radians(orbitYaw);
@@ -597,6 +644,7 @@ bool Update()
     processInput(window);
     for (SceneObject& obj : sceneObjects)
         animateCharacter(obj, deltaTime);
+    updateReferee(deltaTime);
 
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -720,6 +768,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_V)
         setCameraMode(cameraMode == CameraMode::Free ? CameraMode::ThirdPerson : CameraMode::Free);
+
+    // Acciones del jugador en tercera persona
+    if (cameraMode == CameraMode::ThirdPerson) {
+        if (SceneObject* player = followedObject()) {
+            if (key == GLFW_KEY_Q) playOneShot(*player, "Saque");
+            if (key == GLFW_KEY_E) playOneShot(*player, "Remate");
+            if (key == GLFW_KEY_F) playOneShot(*player, "Festejo");
+        }
+    }
 
     if (cameraMode == CameraMode::ThirdPerson && key >= GLFW_KEY_1 && key < GLFW_KEY_1 + PLAYER_COUNT) {
         followedPlayer = key - GLFW_KEY_1;
