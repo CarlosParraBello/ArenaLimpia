@@ -124,7 +124,9 @@ struct SceneObject {
 const float MESA_Y = 0.75f;   // altura de la cubierta de la mesa
 std::vector<SceneObject> sceneObjects = {
     // --- Cancha y juego ---
-    { "Cancha",             CP("VolleyballCourt"),      {   0.0f, 0.0f,   0.0f },    0.0f,  2.5f  },
+    // La cancha es plana (solo las zonas de arena, ya en metros): altura 0 = escala 1.
+    // Sus postes y bandas se quitaron del .blend; la red y los postes son los de RedVoley.
+    { "Cancha",             CP("VolleyballCourt"),      {   0.0f, 0.0f,   0.0f },    0.0f,  0.0f  },
     { "Red",                GY("RedVoley"),             {   0.0f, 0.0f,   0.0f },    0.0f,  2.43f, { 1.88f, 1.0f, 1.0f } },
     { "SillaArbitro",       GY("SillaArbitro"),         {   6.4f, 0.0f,   0.0f },  -90.0f,  2.2f  },
     { "Arbitro",            GY("Arbitro"),              {   7.4f, 0.0f,   1.4f },  -90.0f,  1.75f },
@@ -382,7 +384,7 @@ void drawObject(const SceneObject& obj)
     model = glm::translate(model, obj.position);
     model = glm::rotate(model, glm::radians(obj.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
     float sizeY = obj.boundsMax.y - obj.boundsMin.y;
-    float scale = (sizeY > 0.0f) ? obj.height / sizeY : 1.0f;
+    float scale = (sizeY > 0.001f && obj.height > 0.0f) ? obj.height / sizeY : 1.0f;
     model = glm::scale(model, scale * obj.stretch);
     model = glm::translate(model, -pivot);
 
