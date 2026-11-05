@@ -9,19 +9,19 @@ Los modelos de otros autores o generados con IA deben indicar su fuente original
 - **Vértices y caras:** suma de las piezas, sin aplicar modificadores.
 - **Texturas:** imágenes que usan sus materiales dentro del `.blend`.
 - **Material:** opaco, plástico, traslúcido o metálico.
-- **Origen:** propio, o externo con su fuente.
+- **Origen:** propio, mixto o propio con apoyo de IA (se indica en qué), o externo con su fuente.
 - Las rutas son relativas a `assets/models/`.
 
-Actualizado el 2026-11-03 con los datos que reporta Blender 5.2 de cada `.blend`.
+Actualizado el 2026-11-04.
 
 ## Resumen
 
-| | Modelos |
-|---|---|
-| Carlos Parra | 26 |
-| Gabriel Yukio | 21 |
-| **Total registrado** | **47 de 80** |
-| Faltan | 33 |
+| | Originales | Externos | Total |
+|---|---|---|---|
+| Carlos Parra | 26 | 0 | 26 |
+| Gabriel Yukio | 32 | 8 | 40 |
+| **Total registrado** | **58 de 64** | **8 de 16** | **66 de 80** |
+| Faltan | 6 | 8 | 14 |
 
 ## Modelos
 
@@ -53,46 +53,46 @@ Actualizado el 2026-11-03 con los datos que reporta Blender 5.2 de cada `.blend`
 | 24 | Taza de café | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 3 | 416 | 356 | 0 |  | Propio |
 | 25 | Plato | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 1 | 96 | 50 | 0 |  | Propio |
 | 26 | Trofeo | Carlos Parra | `CarlosParra/Trofeo/Trofeo.blend` | 5 | 169 | 124 | 1 |  | Propio |
-| 27 | Árbitro | Gabriel Yukio | `GabrielYukioayax/Arbitro/Arbitro.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 28 | Aro salvavidas de niño | Gabriel Yukio | `GabrielYukioayax/AroSalvavidasNiño/AroSalvavidasNiño.blend` | 1 | 3456 | 3456 | 1 |  | Propio |
-| 29 | Aro salvavidas | Gabriel Yukio | `GabrielYukioayax/AroSalvavidas/AroSalvavidas.blend` | 1 | 576 | 576 | 1 |  | Propio |
-| 30 | Bote de basura | Gabriel Yukio | `GabrielYukioayax/BoteBasura/BoteBasura.blend` | 1 | 96 | 65 | 1 |  | Propio |
-| 31 | Entrenador | Gabriel Yukio | `GabrielYukioayax/Entrenador/Entrenador.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 32 | Escalera | Gabriel Yukio | `GabrielYukioayax/Escalera/Escalera.blend` | 1 | 960 | 510 | 1 |  | Propio |
-| 33 | Espectador | Gabriel Yukio | `GabrielYukioayax/Espectador/Espectador.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 34 | Espectadora | Gabriel Yukio | `GabrielYukioayax/Espectadora/Espectadora.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 35 | Estrella de mar | Gabriel Yukio | `GabrielYukioayax/EstrellaMar/EstrellaMar.blend` | 1 | 798 | 800 | 1 |  | Propio |
-| 36 | Hielera | Gabriel Yukio | `GabrielYukioayax/Hielera/Hielera.blend` | 1 | 1312 | 1314 | 1 |  | Propio |
-| 37 | Jugador de México | Gabriel Yukio | `GabrielYukioayax/JugadorMX/jugadormx.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 38 | Jugador de Perú | Gabriel Yukio | `GabrielYukioayax/JugadorPR/jugadorperu.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 39 | Jugadora de Holanda | Gabriel Yukio | `GabrielYukioayax/JugadoraHA/jugadoraholanda.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 40 | Jugadora de Japón | Gabriel Yukio | `GabrielYukioayax/JugadoraJA/jugadorajapon.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 41 | Mesa | Gabriel Yukio | `GabrielYukioayax/Mesa/mesa.blend` | 1 | 608 | 604 | 1 |  | Propio |
-| 42 | Niña | Gabriel Yukio | `GabrielYukioayax/Niña/Niña.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 43 | Niño | Gabriel Yukio | `GabrielYukioayax/Niño/Niño.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 44 | Portería | Gabriel Yukio | `GabrielYukioayax/Porteria/Porteria.blend` | 1 | 4680 | 5922 | 1 |  | Propio |
-| 45 | Red de voleibol | Gabriel Yukio | `GabrielYukioayax/RedVoley/RedVoley.blend` | 1 | 2236 | 2772 | 1 |  | Propio |
-| 46 | Salvavidas | Gabriel Yukio | `GabrielYukioayax/Salvavidas/Salvavidas.blend` | 1 | 13530 | 13560 | 1 |  | Por confirmar |
-| 47 | Silla de árbitro | Gabriel Yukio | `GabrielYukioayax/SillaArbitro/SillaArbitro.blend` | 1 | 804 | 846 | 1 |  | Propio |
-| 48 |  |  |  |  |  |  |  |  |  |
-| 49 |  |  |  |  |  |  |  |  |  |
-| 50 |  |  |  |  |  |  |  |  |  |
-| 51 |  |  |  |  |  |  |  |  |  |
-| 52 |  |  |  |  |  |  |  |  |  |
-| 53 |  |  |  |  |  |  |  |  |  |
-| 54 |  |  |  |  |  |  |  |  |  |
-| 55 |  |  |  |  |  |  |  |  |  |
-| 56 |  |  |  |  |  |  |  |  |  |
-| 57 |  |  |  |  |  |  |  |  |  |
-| 58 |  |  |  |  |  |  |  |  |  |
-| 59 |  |  |  |  |  |  |  |  |  |
-| 60 |  |  |  |  |  |  |  |  |  |
-| 61 |  |  |  |  |  |  |  |  |  |
-| 62 |  |  |  |  |  |  |  |  |  |
-| 63 |  |  |  |  |  |  |  |  |  |
-| 64 |  |  |  |  |  |  |  |  |  |
-| 65 |  |  |  |  |  |  |  |  |  |
-| 66 |  |  |  |  |  |  |  |  |  |
+| 27 | Árbitro | Gabriel Yukio | `GabrielYukioayax/Arbitro/Arbitro.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 28 | Entrenador | Gabriel Yukio | `GabrielYukioayax/Entrenador/Entrenador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 29 | Espectador | Gabriel Yukio | `GabrielYukioayax/Espectador/Espectador.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 30 | Espectadora | Gabriel Yukio | `GabrielYukioayax/Espectadora/Espectadora.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 31 | Jugador de México | Gabriel Yukio | `GabrielYukioayax/JugadorMX/jugadormx.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 32 | Jugador de Perú | Gabriel Yukio | `GabrielYukioayax/JugadorPR/jugadorperu.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 33 | Jugadora de Holanda | Gabriel Yukio | `GabrielYukioayax/JugadoraHA/jugadoraholanda.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 34 | Jugadora de Japón | Gabriel Yukio | `GabrielYukioayax/JugadoraJA/jugadorajapon.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 35 | Niña | Gabriel Yukio | `GabrielYukioayax/Nina/Nina.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 36 | Niño | Gabriel Yukio | `GabrielYukioayax/Nino/Nino.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 37 | Salvavidas | Gabriel Yukio | `GabrielYukioayax/Salvavidas/Salvavidas.blend` | 1 | 13530 | 13560 | 1 | Opaco | Mixto: creación del cuerpo completo por el autor; volumen (retoque) y esqueleto con ayuda de IA mediante scripts |
+| 38 | Balón de fútbol | Gabriel Yukio | `GabrielYukioayax/BalonFutbol/BalonFutbol.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
+| 39 | Pelota de playa | Gabriel Yukio | `GabrielYukioayax/BalonPlaya/BalonPlaya.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
+| 40 | Balón de voleibol | Gabriel Yukio | `GabrielYukioayax/BalonVoley/BalonVoley.blend` | 1 | 482 | 512 | 1 | Plástico | Propio con apoyo de IA (textura generada con script) |
+| 41 | Aro salvavidas | Gabriel Yukio | `GabrielYukioayax/AroSalvavidas/AroSalvavidas.blend` | 1 | 576 | 576 | 1 | Plástico | Propio |
+| 42 | Aro salvavidas de niño | Gabriel Yukio | `GabrielYukioayax/AroSalvavidasNino/AroSalvavidasNino.blend` | 1 | 3456 | 3456 | 1 | Plástico | Propio |
+| 43 | Letrero de bienvenida | Gabriel Yukio | `GabrielYukioayax/Bienvenida/Bienvenida.blend` | 1 | 136 | 74 | 1 | Opaco | Propio |
+| 44 | Bloqueador solar | Gabriel Yukio | `GabrielYukioayax/BloqueadorSolar/BloqueadorSolar.blend` | 1 | 544 | 514 | 1 | Plástico | Propio |
+| 45 | Bote de basura | Gabriel Yukio | `GabrielYukioayax/BoteBasura/BoteBasura.blend` | 1 | 96 | 65 | 1 | Plástico | Propio |
+| 46 | Botella de agua | Gabriel Yukio | `GabrielYukioayax/BotellaAgua/BotellaAgua.blend` | 1 | 544 | 514 | 1 | Traslúcido | Propio |
+| 47 | Escalera | Gabriel Yukio | `GabrielYukioayax/Escalera/Escalera.blend` | 1 | 960 | 510 | 1 | Opaco | Propio |
+| 48 | Estrella de mar | Gabriel Yukio | `GabrielYukioayax/EstrellaMar/EstrellaMar.blend` | 1 | 798 | 800 | 1 | Opaco | Propio |
+| 49 | Frisbee | Gabriel Yukio | `GabrielYukioayax/Frisbee/Frisbee.blend` | 1 | 160 | 129 | 1 | Plástico | Propio |
+| 50 | Garrafón | Gabriel Yukio | `GabrielYukioayax/Garrafon/Garrafon.blend` | 1 | 416 | 386 | 1 | Traslúcido | Propio |
+| 51 | Hielera azul | Gabriel Yukio | `GabrielYukioayax/Hielera/Hielera.blend` | 1 | 1312 | 1314 | 1 | Plástico | Propio |
+| 52 | Marcador | Gabriel Yukio | `GabrielYukioayax/Marcador/Marcador.blend` | 1 | 136 | 74 | 1 | Opaco | Propio |
+| 53 | Mesa | Gabriel Yukio | `GabrielYukioayax/Mesa/mesa.blend` | 1 | 608 | 604 | 1 | Opaco | Propio |
+| 54 | Portería | Gabriel Yukio | `GabrielYukioayax/Porteria/Porteria.blend` | 1 | 4680 | 5922 | 1 | Opaco | Propio |
+| 55 | Red de voleibol | Gabriel Yukio | `GabrielYukioayax/RedVoley/RedVoley.blend` | 1 | 2236 | 2772 | 1 | Opaco | Propio |
+| 56 | Lata de refresco | Gabriel Yukio | `GabrielYukioayax/Refresco/Refresco.blend` | 1 | 256 | 226 | 1 | Metálico | Propio |
+| 57 | Silla de árbitro | Gabriel Yukio | `GabrielYukioayax/SillaArbitro/SillaArbitro.blend` | 1 | 804 | 846 | 1 | Opaco | Propio |
+| 58 | Termo | Gabriel Yukio | `GabrielYukioayax/Termo/Termo.blend` | 1 | 544 | 514 | 1 | Metálico | Propio |
+| 59 | Gaviota | Gabriel Yukio | `GabrielYukioayax/Gaviota/Mesh_Seagull.obj` | — | — | — | 1 | Opaco | Externo: Poly by Google, *Seagull*, CC-BY |
+| 60 | Cangrejo | Gabriel Yukio | `GabrielYukioayax/Cangrejo/model.obj` | — | — | — | 0 | Opaco | Externo: Anónimo, *Feeling Crabby*, CC-BY |
+| 61 | Langosta | Gabriel Yukio | `GabrielYukioayax/Langosta/model.obj` | — | — | — | 0 | Opaco | Externo: God Appeasers, *lobster*, CC-BY |
+| 62 | Gato | Gabriel Yukio | `GabrielYukioayax/Gato/Gato.blend` | — | — | — | 2 | Opaco | Externo: alwayshasbean, *Dingus the cat*, CC-BY |
+| 63 | Tortuga | Gabriel Yukio | `GabrielYukioayax/Tortuga/turtle.obj` | — | — | — | 0 | Opaco | Externo: Poly by Google, *Turtle*, CC-BY |
+| 64 | Bote de pesca | Gabriel Yukio | `GabrielYukioayax/Bote/Boat Texture 1.obj` | — | — | — | 1 | Opaco | Externo: Poly by Google, *Boat*, CC-BY |
+| 65 | Muelle | Gabriel Yukio | `GabrielYukioayax/Puerto/Puerto.blend` | — | — | — | — | Opaco | Externo: Quaternius, *Port*, CC0 |
+| 66 | Faro | Gabriel Yukio | `GabrielYukioayax/Faro/Lighthouse singly.obj` | — | — | — | 1 | Opaco | Externo: Poly by Google, *Lighthouse*, CC-BY |
 | 67 |  |  |  |  |  |  |  |  |  |
 | 68 |  |  |  |  |  |  |  |  |  |
 | 69 |  |  |  |  |  |  |  |  |  |
@@ -108,13 +108,35 @@ Actualizado el 2026-11-03 con los datos que reporta Blender 5.2 de cada `.blend`
 | 79 |  |  |  |  |  |  |  |  |  |
 | 80 |  |  |  |  |  |  |  |  |  |
 
+## Fuentes de los modelos externos (APA)
+
+- alwayshasbean. (2023). *Dingus the cat* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/4dXgbKLHD9
+- Anónimo. (2017). *Feeling Crabby* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/fdvCZS-mwQW
+- God Appeasers. (2017). *lobster* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/25ijpkQ3YAb
+- Poly by Google. (2017a). *Boat* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/1ZuSXvhkRg_
+- Poly by Google. (2017b). *Lighthouse* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/0t2ZYRBsqX-
+- Poly by Google. (2017c). *Seagull* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/0WRzrtCIIRp
+- Poly by Google. (2017d). *Turtle* [Modelo 3D]. Poly Pizza. Licencia CC-BY. https://poly.pizza/m/2LCcq8vhqJ3
+- Quaternius. (2022). *Port* [Modelo 3D]. Poly Pizza. Dominio público (CC0). https://poly.pizza/m/Gjt5yMM4Vw
+
+## Uso de IA
+
+Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
+
+- **Personas (Mixto):** el cuerpo base completo fue modelado por el autor en Blender. Con
+  ayuda de IA, mediante scripts de Python ejecutados y ajustados por el autor, se hizo un
+  retoque de volumen del torso y se creó el esqueleto con pesos automáticos. El texturizado
+  (ropa, colores, pelo, piel) y las variantes de cada personaje son del autor.
+- **Balones (Propio con apoyo de IA):** la malla es del autor; la textura se generó con un
+  script de Python con ayuda de IA.
+
 ## Pendientes de revisión
 
-1. **Personajes con la misma malla.** Árbitro, Entrenador, Espectador, Espectadora, los cuatro
-   jugadores, Niña, Niño y Salvavidas (11 modelos) tienen exactamente 13,530 vértices y
-   13,560 caras, así que comparten el cuerpo base. Hay que confirmar de dónde salió ese cuerpo:
-   si viene de otro autor (MakeHuman, Mixamo, etc.) se cita la fuente y no cuenta como original,
-   y es posible que se evalúen como un solo modelo con variantes.
+1. ~~**Personajes con la misma malla.**~~ **Resuelto.** Los 11 personajes de Gabriel comparten
+   un cuerpo base modelado por Gabriel en Blender, con retoque de volumen y esqueleto hechos con
+   ayuda de IA mediante scripts (ver "Uso de IA"); no viene de MakeHuman, Mixamo ni otro autor. El profesor confirmó que las variantes cuentan como modelos distintos "mientras se
+   observe dicho cambio entre jugadores en el programa en OpenGL"; cada uno tiene ropa, colores,
+   pelo y tono de piel distintos, y la niña y el niño tienen otras proporciones.
 2. **Rocas.** Las 9 rocas de `CosasDePlaya.blend` son la misma malla escalada; se registran
    como un solo modelo.
 3. **Sin material.** `Palmera.blend` (las 11 piezas) y la taza y el plato de
@@ -124,9 +146,12 @@ Actualizado el 2026-11-03 con los datos que reporta Blender 5.2 de cada `.blend`
    `tools/exportar_obj.py` usa en su lugar las imágenes `*_Bake.png` de
    `assets/textures/imagenes_texturizados/`. Los materiales Blanco, Llanta_Negro, Rin_Gris y
    Centro_Oscuro no tienen imagen bake y se exportan solo con su color.
-5. **Escalas distintas.** Los modelos no comparten unidades: la cubeta mide 2 m de ancho y el
-   trofeo 2.4 m de alto, mientras que la tabla de surf mide 1.9 m. Conviene acordar
-   1 unidad = 1 metro y corregir los `.blend`; mientras tanto, `src/main.cpp` aplica una
-   escala por modelo.
-6. **Hieleras repetidas.** Hay una hielera de Carlos (en `CosasDePlaya.blend`) y otra de Gabriel
-   (`Hielera.blend`). Si son el mismo objeto de la escena, solo cuenta una.
+5. **Escalas distintas.** Los modelos no comparten unidades. Medidas en los `.blend` de Gabriel:
+   personas de 10.7 m de alto, balones de 2 m, lata de 72 cm, botella y termo de 9 cm, letrero
+   de 13.6 m. Conviene acordar 1 unidad = 1 metro y corregir los `.blend`; mientras tanto,
+   `src/main.cpp` aplica una escala por modelo.
+6. ~~**Hieleras repetidas.**~~ **Resuelto.** Son modelos distintos: la de Carlos es roja y
+   cuadrada con asa de barra; la de Gabriel es azul con tapa blanca y asas laterales.
+7. **Escala negativa.** `BotellaAgua.blend` y `BloqueadorSolar.blend` tienen escala negativa
+   sin aplicar (Ctrl+A → Escala y recalcular normales).
+8. **Termo.** El cuerpo de la textura quedó sin pintar (negro); falta el gris metálico.
