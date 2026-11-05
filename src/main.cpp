@@ -34,6 +34,7 @@
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
 *   --camara x y z yaw pitch  posición y orientación inicial de la cámara
 *   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
+*   --simular <Saque|Remate> <s>  el jugador seguido hace la acción y se adelantan s segundos
 *   --pose <anim> <s>         fija la animación <anim> en el segundo s en los personajes que la tengan
 */
 
@@ -80,6 +81,8 @@ bool findAssetsRoot();
 enum class CameraMode;
 void setCameraMode(CameraMode mode);
 bool saveScreenshot(const std::string& path);
+void runSimulationTest();
+void initBall();
 
 // ---------------------------------------------------------------------------
 // Ventana y tiempo
@@ -160,6 +163,9 @@ struct SceneObject {
     float oneShotTime = 0.0f;
     glm::vec3 boundsMin = glm::vec3(0.0f);
     glm::vec3 boundsMax = glm::vec3(0.0f);
+    // Para objetos con física (el balón): position es el centro y "spin" su orientación
+    bool      centerPivot = false;
+    glm::mat4 spin = glm::mat4(1.0f);
 };
 
 #define CP(m) "assets/models/CarlosParra/" m "/" m ".obj"
@@ -252,6 +258,8 @@ std::vector<SceneObject> sceneObjects = {
 
 // Modo de captura para pruebas automáticas
 std::string capturePath;
+std::string simulateAction;      // --simular <Saque|Remate> <s>: adelanta la simulación (pruebas)
+float simulateSeconds = 0.0f;
 std::string forcedAnim;          // --pose <anim> <s>: fija una animación (para capturas)
 float forcedAnimTime = 0.0f;
 int frameCount = 0;
@@ -269,6 +277,10 @@ int main(int argc, char** argv)
             camera.Pitch = std::stof(argv[i + 5]);
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
+        }
+        else if (arg == "--simular" && i + 2 < argc) {
+            simulateAction = argv[++i];
+            simulateSeconds = std::stof(argv[++i]);
         }
         else if (arg == "--pose" && i + 2 < argc) {
             forcedAnim = argv[++i];
@@ -290,6 +302,9 @@ int main(int argc, char** argv)
         glfwTerminate();
         return -1;
     }
+
+    if (!simulateAction.empty())
+        runSimulationTest();
 
     while (!glfwWindowShouldClose(window)) {
         if (!Update())
@@ -454,23 +469,32 @@ bool Start()
     }
     std::cout << loaded.size() << " modelos cargados en " << (glfwGetTime() - tTotal) << " s" << std::endl;
 
+    initBall();
     setCameraMode(cameraMode);
     return true;
 }
 
-void drawObject(const SceneObject& obj)
+// Matriz de modelo: apoya el objeto sobre la arena (o lo centra, si centerPivot), lo gira y
+// lo escala a su altura en metros.
+glm::mat4 objectMatrix(const SceneObject& obj)
 {
-    // Apoyar el modelo sobre la arena y centrarlo en su posición
     glm::vec3 center = 0.5f * (obj.boundsMin + obj.boundsMax);
-    glm::vec3 pivot(center.x, obj.boundsMin.y, center.z);
+    glm::vec3 pivot = obj.centerPivot ? center : glm::vec3(center.x, obj.boundsMin.y, center.z);
 
     glm::mat4 model(1.0f);
     model = glm::translate(model, obj.position);
     model = glm::rotate(model, glm::radians(obj.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = model * obj.spin;
     float sizeY = obj.boundsMax.y - obj.boundsMin.y;
     float scale = (sizeY > 0.001f && obj.height > 0.0f) ? obj.height / sizeY : 1.0f;
     model = glm::scale(model, scale * obj.stretch);
     model = glm::translate(model, -pivot);
+    return model;
+}
+
+void drawObject(const SceneObject& obj)
+{
+    glm::mat4 model = objectMatrix(obj);
 
     if (obj.skinned) {
         skinShader->use();
@@ -546,6 +570,244 @@ void updateReferee(float dt)
     refereeTimer = REFEREE_INTERVAL;
     if (SceneObject* referee = findObject("Arbitro"))
         playOneShot(*referee, "Marcar");
+}
+
+// ---------------------------------------------------------------------------
+// Balón: tiro parabólico (animación procedural)
+//
+// El balón sigue a la mano mientras el jugador lo sostiene. En el lanzamiento y en el golpe
+// se calcula la velocidad inicial que lo lleva a un punto en un tiempo dado:
+//     p(T) = p0 + v0 T + g T^2 / 2   =>   v0 = (p1 - p0) / T - g T / 2
+// Después vuela con gravedad, rebota en la arena perdiendo energía, choca con la red y rueda
+// hasta detenerse. Gira según su velocidad.
+// ---------------------------------------------------------------------------
+const glm::vec3 GRAVITY(0.0f, -9.81f, 0.0f);
+const float BALL_RADIUS      = 0.105f;
+const float BALL_RESTITUTION = 0.55f;   // fracción de la velocidad vertical que conserva al botar
+const float BALL_FRICTION    = 0.75f;   // fracción de la velocidad horizontal que conserva al botar
+const float BALL_ROLL_DAMP   = 1.5f;    // frenado al rodar (1/s)
+const float NET_HALF_WIDTH   = 5.25f;   // red de RedVoley en z = 0
+const float NET_BOTTOM       = 1.44f;
+const float NET_TOP          = 2.43f;
+
+// Un golpe: en qué momento de la animación se lanza/golpea y a dónde va el balón
+struct ShotDef {
+    const char* anim;
+    bool  heldAtStart;     // true: el balón empieza en la mano izquierda (saque)
+    float tossTime;        // s: se suelta (saque) o lo pasa un compañero (remate)
+    float hitTime;         // s: contacto con la mano derecha
+    float targetDistance;  // m al frente del jugador donde cae
+    float flightTime;      // s desde el golpe hasta caer
+};
+const ShotDef SHOT_SAQUE  = { "Saque",  true,  0.55f, 22.0f / 24.0f, 13.0f, 1.25f };
+const ShotDef SHOT_REMATE = { "Remate", false, 0.05f, 21.0f / 24.0f,  6.5f, 0.45f };
+
+enum class BallState { Resting, Held, Flying };
+struct Ball {
+    SceneObject* obj = nullptr;
+    BallState state = BallState::Resting;
+    glm::vec3 pos = glm::vec3(0.0f);
+    glm::vec3 vel = glm::vec3(0.0f);
+    glm::mat4 orientation = glm::mat4(1.0f);
+    // Golpe en curso
+    SceneObject*   shooter = nullptr;
+    const ShotDef* shot = nullptr;
+    int            phase = 0;   // 0 = antes de lanzar, 1 = en el aire hacia la mano, 2 = golpeado
+} ball;
+
+void initBall()
+{
+    ball.obj = findObject("BalonVoley");
+    if (!ball.obj) return;
+    ball.obj->centerPivot = true;
+    ball.pos = ball.obj->position + glm::vec3(0.0f, BALL_RADIUS, 0.0f);
+    ball.obj->position = ball.pos;
+}
+
+glm::vec3 forwardOf(const SceneObject& obj)
+{
+    float a = glm::radians(obj.rotationY);   // el modelo mira hacia +Z con rotationY = 0
+    return glm::vec3(sin(a), 0.0f, cos(a));
+}
+
+// Posición en el mundo de un hueso del personaje en el instante t de una animación
+glm::vec3 boneWorldAt(SceneObject& obj, int anim, float t, const char* bone)
+{
+    obj.skinned->setPose(anim, t);
+    glm::vec3 local = obj.skinned->bonePosition(bone);
+    return glm::vec3(objectMatrix(obj) * glm::vec4(local, 1.0f));
+}
+
+glm::vec3 launchVelocity(const glm::vec3& from, const glm::vec3& to, float T)
+{
+    return (to - from) / T - 0.5f * GRAVITY * T;
+}
+
+// ¿El tiro de from con velocidad v pasa por encima de la red (con margen)?
+bool clearsNet(const glm::vec3& from, const glm::vec3& v)
+{
+    if (fabs(v.z) < 1e-4f) return true;
+    float tNet = -from.z / v.z;                  // instante en que cruza z = 0
+    if (tNet <= 0.0f) return true;               // se aleja de la red
+    float x = from.x + v.x * tNet;
+    float y = from.y + v.y * tNet + 0.5f * GRAVITY.y * tNet * tNet;
+    return fabs(x) > NET_HALF_WIDTH || y > NET_TOP + 0.3f;
+}
+
+// Velocidad para que el balón caiga a "distance" metros al frente en "T" segundos.
+// Si así chocaría con la red (ayuda de puntería):
+//   1) alarga el tiro manteniendo la rapidez horizontal (remate más profundo), hasta el doble;
+//   2) si no basta, le da más parábola.
+glm::vec3 aimedVelocity(const glm::vec3& from, const glm::vec3& origin, const glm::vec3& forward,
+                        float distance, float T)
+{
+    const float maxDistance = 2.0f * distance, speed = distance / T;
+    glm::vec3 to, v;
+    for (int i = 0; i < 80; i++) {
+        to = origin + forward * distance;
+        to.y = BALL_RADIUS;
+        v = launchVelocity(from, to, T);
+        if (clearsNet(from, v)) break;
+        if (distance < maxDistance) {
+            distance += 0.5f;
+            T = distance / speed;
+        } else {
+            T += 0.05f;
+        }
+    }
+    return v;
+}
+
+void startShot(SceneObject& player, const ShotDef& shot)
+{
+    if (!ball.obj) return;
+    ball.shooter = &player;
+    ball.shot = &shot;
+    ball.phase = 0;
+    ball.state = shot.heldAtStart ? BallState::Held : BallState::Flying;
+    ball.vel = glm::vec3(0.0f);
+}
+
+void updateShot()
+{
+    SceneObject* p = ball.shooter;
+    if (!p) return;
+    int anim = p->skinned ? p->skinned->findAnimation(ball.shot->anim) : -1;
+    if (anim < 0 || p->oneShot != anim) {   // la animación terminó o se interrumpió
+        ball.shooter = nullptr;
+        return;
+    }
+    float t = p->oneShotTime;
+    const ShotDef& s = *ball.shot;
+
+    if (ball.phase == 0) {
+        if (s.heldAtStart) {
+            ball.state = BallState::Held;
+            ball.pos = boneWorldAt(*p, anim, t, "mano.L") + glm::vec3(0.0f, BALL_RADIUS, 0.0f);
+        }
+        if (t >= s.tossTime) {
+            glm::vec3 from = ball.pos;
+            if (!s.heldAtStart) {
+                // Pase de un compañero: llega desde la izquierda y un poco al frente
+                glm::vec3 fwd = forwardOf(*p);
+                glm::vec3 right(-fwd.z, 0.0f, fwd.x);
+                from = p->position - right * 3.0f + fwd * 1.5f + glm::vec3(0.0f, 1.5f, 0.0f);
+            }
+            glm::vec3 hand = boneWorldAt(*p, anim, s.hitTime, "mano.R");
+            ball.pos = from;
+            ball.vel = launchVelocity(from, hand, s.hitTime - t);
+            ball.state = BallState::Flying;
+            ball.phase = 1;
+        }
+    } else if (ball.phase == 1 && t >= s.hitTime) {
+        ball.vel = aimedVelocity(ball.pos, p->position, forwardOf(*p), s.targetDistance, s.flightTime);
+        ball.phase = 2;
+        ball.shooter = nullptr;   // a partir de aquí solo física
+    }
+}
+
+void updateBall(float dt)
+{
+    if (!ball.obj) return;
+    updateShot();
+
+    if (ball.state == BallState::Flying) {
+        glm::vec3 prev = ball.pos;
+        // Integración exacta para aceleración constante
+        ball.pos += ball.vel * dt + 0.5f * GRAVITY * dt * dt;
+        ball.vel += GRAVITY * dt;
+
+        // Red: si cruza z = 0 a la altura de la red, rebota hacia atrás
+        if ((prev.z > 0.0f) != (ball.pos.z > 0.0f) && fabs(ball.pos.x) < NET_HALF_WIDTH &&
+            ball.pos.y > NET_BOTTOM - BALL_RADIUS && ball.pos.y < NET_TOP + BALL_RADIUS) {
+            ball.pos.z = (prev.z > 0.0f ? 1.0f : -1.0f) * BALL_RADIUS;
+            ball.vel.z = -ball.vel.z * 0.2f;
+            ball.vel.x *= 0.5f;
+        }
+
+        // Arena: bota perdiendo energía; si ya casi no bota, rueda
+        if (ball.pos.y < BALL_RADIUS) {
+            ball.pos.y = BALL_RADIUS;
+            if (ball.vel.y < 0.0f) {
+                ball.vel.y = -ball.vel.y * BALL_RESTITUTION;
+                ball.vel.x *= BALL_FRICTION;
+                ball.vel.z *= BALL_FRICTION;
+                if (ball.vel.y < 0.6f) ball.vel.y = 0.0f;
+            }
+            if (ball.vel.y == 0.0f) {
+                ball.vel *= exp(-BALL_ROLL_DAMP * dt);
+                if (glm::length(ball.vel) < 0.05f) {
+                    ball.vel = glm::vec3(0.0f);
+                    ball.state = BallState::Resting;
+                }
+            }
+        }
+        ball.pos.x = glm::clamp(ball.pos.x, -WORLD_LIMIT, WORLD_LIMIT);
+        ball.pos.z = glm::clamp(ball.pos.z, -WORLD_LIMIT, WORLD_LIMIT);
+
+        // Giro: alrededor del eje perpendicular a la velocidad horizontal
+        glm::vec3 vh(ball.vel.x, 0.0f, ball.vel.z);
+        float speed = glm::length(vh);
+        if (speed > 0.01f) {
+            glm::vec3 axis = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), vh));
+            float angle = speed / BALL_RADIUS * dt;
+            ball.orientation = glm::rotate(glm::mat4(1.0f), angle, axis) * ball.orientation;
+        }
+    }
+
+    ball.obj->position = ball.pos;
+    ball.obj->spin = ball.orientation;
+}
+
+// Avanza todo lo que se mueve solo: balón, personajes y árbitro.
+// El balón va primero porque lee el tiempo de la animación del jugador antes de que avance;
+// además boneWorldAt cambia la pose y animateCharacter la deja como corresponde.
+void stepSimulation(float dt)
+{
+    updateBall(dt);
+    for (SceneObject& obj : sceneObjects)
+        animateCharacter(obj, dt);
+    updateReferee(dt);
+}
+
+// --simular: el jugador seguido hace la acción y se adelanta la simulación (para capturas)
+void runSimulationTest()
+{
+    SceneObject* player = findObject(PLAYER_NAMES[followedPlayer]);
+    if (!player) return;
+    const ShotDef& shot = (simulateAction == "Remate") ? SHOT_REMATE : SHOT_SAQUE;
+    if (!playOneShot(*player, shot.anim)) return;
+    startShot(*player, shot);
+    const float dt = 1.0f / 120.0f;
+    int steps = (int)(simulateSeconds / dt);
+    for (int i = 0; i <= steps; i++) {
+        if (i % 12 == 0)
+            printf("t=%.2f balon=(%.2f, %.2f, %.2f) estado=%d\n", i * dt,
+                   ball.pos.x, ball.pos.y, ball.pos.z, (int)ball.state);
+        if (i < steps)
+            stepSimulation(dt);
+    }
+    lastFrame = (float)glfwGetTime();
 }
 
 // ---------------------------------------------------------------------------
@@ -642,9 +904,7 @@ bool Update()
     for (SceneObject& obj : sceneObjects)
         obj.speed = 0.0f;
     processInput(window);
-    for (SceneObject& obj : sceneObjects)
-        animateCharacter(obj, deltaTime);
-    updateReferee(deltaTime);
+    stepSimulation(deltaTime);
 
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -772,8 +1032,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     // Acciones del jugador en tercera persona
     if (cameraMode == CameraMode::ThirdPerson) {
         if (SceneObject* player = followedObject()) {
-            if (key == GLFW_KEY_Q) playOneShot(*player, "Saque");
-            if (key == GLFW_KEY_E) playOneShot(*player, "Remate");
+            if (key == GLFW_KEY_Q && playOneShot(*player, "Saque"))  startShot(*player, SHOT_SAQUE);
+            if (key == GLFW_KEY_E && playOneShot(*player, "Remate")) startShot(*player, SHOT_REMATE);
             if (key == GLFW_KEY_F) playOneShot(*player, "Festejo");
         }
     }

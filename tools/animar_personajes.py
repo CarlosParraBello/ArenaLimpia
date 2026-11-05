@@ -169,11 +169,11 @@ def remate():
                     "brazo.L": arm_front("L", 110.0),
                     "brazo.R": arm_front("R", 160.0), "antebrazo.R": rot(X, -80.0),
                     "pecho": rot(X, -15.0) @ rot(Z, 20.0)}), 0.6),
-        # Golpe: el brazo derecho baja con fuerza y el tronco se cierra
+        # Golpe: brazo derecho extendido arriba de la cabeza, en lo más alto del salto
         (21, merge({"pierna.L": rot(X, 30.0), "pierna.R": rot(X, 30.0),
                     "brazo.L": arm_down("L", 20.0),
-                    "brazo.R": arm_front("R", 40.0), "antebrazo.R": rot(X, 0.0),
-                    "pecho": rot(X, 25.0) @ rot(Z, -15.0)}), 0.55),
+                    "brazo.R": arm_front("R", 95.0), "antebrazo.R": rot(X, 0.0),
+                    "pecho": rot(X, 10.0) @ rot(Z, -15.0)}), 0.58),
         # Seguimiento en la caída
         (25, merge({"pierna.L": rot(X, 15.0), "pierna.R": rot(X, 15.0),
                     "brazo.L": arm_down("L", 0.0),

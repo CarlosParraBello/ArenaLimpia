@@ -79,7 +79,7 @@ Hay dos cámaras; **V** cambia entre ellas.
 | Mouse | Girar la cámara alrededor del jugador |
 | Rueda | Acercar / alejar |
 | 1 2 3 4 | Elegir jugador (MX, PR, HA, JA) |
-| Q / E / F | Saque / remate / festejo |
+| Q / E / F | Saque / remate (lanzan el balón) / festejo |
 
 **Generales**
 

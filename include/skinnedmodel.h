@@ -32,6 +32,7 @@ public:
     map<string, int>  boneIndex;     // nombre del hueso -> índice en gBones
     vector<glm::mat4> boneOffset;    // de espacio de malla a espacio del hueso (pose de reposo)
     glm::mat4         gBones[MAX_SKIN_BONES];
+    map<string, glm::mat4> boneGlobal; // transformación de cada hueso en la pose actual (espacio del modelo)
     glm::mat4         globalInverse = glm::mat4(1.0f);
 
     // Caja envolvente en la pose del primer cuadro de la primera animación
@@ -74,6 +75,15 @@ public:
         double ticks = a->mDuration > 0.0 ? fmod((double)t * tps, a->mDuration) : 0.0;
         if (ticks < 0.0) ticks += a->mDuration;
         readNodeHierarchy(a, (float)ticks, scene->mRootNode, glm::mat4(1.0f));
+    }
+
+    // Posición (espacio del modelo) del origen de un hueso en la pose actual: su articulación.
+    // Sirve para saber dónde está la mano y poner ahí el balón.
+    glm::vec3 bonePosition(const string& name) const
+    {
+        auto it = boneGlobal.find(name);
+        if (it == boneGlobal.end()) return glm::vec3(0.0f);
+        return glm::vec3(it->second[3]);
     }
 
     void Draw(Shader& shader)
@@ -245,8 +255,10 @@ private:
 
         glm::mat4 global = parent * local;
         auto it = boneIndex.find(name);
-        if (it != boneIndex.end())
+        if (it != boneIndex.end()) {
             gBones[it->second] = globalInverse * global * boneOffset[it->second];
+            boneGlobal[name] = globalInverse * global;
+        }
 
         for (unsigned int i = 0; i < node->mNumChildren; i++)
             readNodeHierarchy(anim, ticks, node->mChildren[i], global);
