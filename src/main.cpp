@@ -34,6 +34,7 @@
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
 *   --camara x y z yaw pitch  posición y orientación inicial de la cámara
 *   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
+*   --tiempo <s>              empieza la simulación en el segundo s (viento, fuego)
 *   --simular <Saque|Remate> <s>  el jugador seguido hace la acción y se adelantan s segundos
 *   --pose <anim> <s>         fija la animación <anim> en el segundo s en los personajes que la tengan
 */
@@ -83,6 +84,8 @@ void setCameraMode(CameraMode mode);
 bool saveScreenshot(const std::string& path);
 void runSimulationTest();
 void initBall();
+void initPalm();
+extern float simTime;
 
 // ---------------------------------------------------------------------------
 // Ventana y tiempo
@@ -166,6 +169,9 @@ struct SceneObject {
     // Para objetos con física (el balón): position es el centro y "spin" su orientación
     bool      centerPivot = false;
     glm::mat4 spin = glm::mat4(1.0f);
+    // Animación por piezas: una matriz y una emisión por malla (vacío = modelo rígido)
+    std::vector<glm::mat4> parts;
+    std::vector<float>     partEmission;
 };
 
 #define CP(m) "assets/models/CarlosParra/" m "/" m ".obj"
@@ -278,6 +284,8 @@ int main(int argc, char** argv)
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
         }
+        else if (arg == "--tiempo" && i + 1 < argc)
+            simTime = std::stof(argv[++i]);
         else if (arg == "--simular" && i + 2 < argc) {
             simulateAction = argv[++i];
             simulateSeconds = std::stof(argv[++i]);
@@ -470,6 +478,7 @@ bool Start()
     std::cout << loaded.size() << " modelos cargados en " << (glfwGetTime() - tTotal) << " s" << std::endl;
 
     initBall();
+    initPalm();
     setCameraMode(cameraMode);
     return true;
 }
@@ -501,6 +510,13 @@ void drawObject(const SceneObject& obj)
         skinShader->setMat4("model", model);
         obj.skinned->Draw(*skinShader);
         phongShader->use();
+    } else if (!obj.parts.empty()) {
+        for (size_t i = 0; i < obj.model->meshes.size(); i++) {
+            phongShader->setMat4("model", model * obj.parts[i]);
+            phongShader->setFloat("emission", obj.partEmission[i]);
+            obj.model->meshes[i].Draw(*phongShader);
+        }
+        phongShader->setFloat("emission", 0.0f);
     } else {
         phongShader->setMat4("model", model);
         obj.model->Draw(*phongShader);
@@ -570,6 +586,146 @@ void updateReferee(float dt)
     refereeTimer = REFEREE_INTERVAL;
     if (SceneObject* referee = findObject("Arbitro"))
         playOneShot(*referee, "Marcar");
+}
+
+// ---------------------------------------------------------------------------
+// Animación por piezas: jerarquía de transformaciones dentro de un modelo
+//
+// Un modelo OBJ trae una malla por objeto de Blender. Si un SceneObject tiene "parts", cada
+// malla se dibuja con objectMatrix(obj) * parts[i], así se pueden mover piezas por separado.
+// ---------------------------------------------------------------------------
+int findMesh(const SceneObject& obj, const std::string& name)
+{
+    if (!obj.model) return -1;
+    for (size_t i = 0; i < obj.model->meshNames.size(); i++)
+        if (obj.model->meshNames[i] == name) return (int)i;
+    return -1;
+}
+
+void meshBounds(const Mesh& mesh, glm::vec3& mn, glm::vec3& mx)
+{
+    mn = glm::vec3(FLT_MAX);
+    mx = glm::vec3(-FLT_MAX);
+    for (const Vertex& v : mesh.vertices) {
+        mn = glm::min(mn, v.Position);
+        mx = glm::max(mx, v.Position);
+    }
+}
+
+// Rotación de "angle" grados alrededor de un eje que pasa por "pivot"
+glm::mat4 rotateAround(const glm::vec3& pivot, float angle, const glm::vec3& axis)
+{
+    return glm::translate(glm::mat4(1.0f), pivot) *
+           glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis) *
+           glm::translate(glm::mat4(1.0f), -pivot);
+}
+
+// Ruido suave en [-1, 1]: suma de senos de frecuencias que no son múltiplos entre sí,
+// así el patrón no se repite de forma evidente.
+float flicker(float t, float seed)
+{
+    return 0.5f * sin(7.3f * t + seed) + 0.3f * sin(13.1f * t + 2.1f * seed) +
+           0.2f * sin(23.7f * t + 3.7f * seed);
+}
+
+// ---------------------------------------------------------------------------
+// Palmera con viento y fuego de la fogata (animaciones procedurales)
+//
+// Jerarquía de la palmera:
+//   Palmera -> Tronco (se mece desde la base) -> Hojas (aletean sobre su punto de unión)
+//                                             -> Cocos (siguen la punta del tronco)
+//   M_hoja = M_palmera * R_tronco(theta) * T(p_i) * R_hoja(theta_i) * T(-p_i)
+// El fuego (en el mismo modelo) no cuelga del tronco: cada llama se estira desde su base
+// con ruido y además brilla (emisión) con la misma intensidad.
+// ---------------------------------------------------------------------------
+const glm::vec3 WIND_AXIS = glm::normalize(glm::vec3(0.3f, 0.0f, 1.0f));  // eje de giro del tronco
+
+struct Leaf  { int mesh; glm::vec3 pivot; glm::vec3 axis; float phase; };
+struct Flame { int mesh; glm::vec3 base; float seed; };
+
+struct PalmRig {
+    SceneObject* obj = nullptr;
+    int trunk = -1;
+    glm::vec3 trunkBase = glm::vec3(0.0f);
+    std::vector<Leaf>  leaves;
+    std::vector<int>   followers;   // cocos: siguen al tronco sin moverse por su cuenta
+    std::vector<Flame> flames;
+} palm;
+
+void initPalm()
+{
+    palm.obj = findObject("Palmera");
+    if (!palm.obj || !palm.obj->model) return;
+    SceneObject& o = *palm.obj;
+    o.parts.assign(o.model->meshes.size(), glm::mat4(1.0f));
+    o.partEmission.assign(o.model->meshes.size(), 0.0f);
+
+    palm.trunk = findMesh(o, "Tronco");
+    if (palm.trunk < 0) return;
+    glm::vec3 mn, mx;
+    meshBounds(o.model->meshes[palm.trunk], mn, mx);
+    palm.trunkBase = glm::vec3(0.5f * (mn.x + mx.x), mn.y, 0.5f * (mn.z + mx.z));
+    glm::vec3 trunkTop(palm.trunkBase.x, mx.y, palm.trunkBase.z);
+
+    for (size_t i = 0; i < o.model->meshNames.size(); i++) {
+        const std::string& name = o.model->meshNames[i];
+        const Mesh& mesh = o.model->meshes[i];
+        if (name.rfind("Hoja", 0) == 0) {
+            // Punto de unión: el vértice de la hoja más cercano a la punta del tronco
+            glm::vec3 pivot = trunkTop, center(0.0f);
+            float best = FLT_MAX;
+            for (const Vertex& v : mesh.vertices) {
+                float d = glm::length(v.Position - trunkTop);
+                if (d < best) { best = d; pivot = v.Position; }
+                center += v.Position;
+            }
+            center /= (float)std::max<size_t>(1, mesh.vertices.size());
+            // Eje de aleteo: horizontal y perpendicular a la dirección de la hoja
+            glm::vec3 dir(center.x - pivot.x, 0.0f, center.z - pivot.z);
+            glm::vec3 axis = glm::length(dir) > 1e-4f
+                ? glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), dir))
+                : glm::vec3(1.0f, 0.0f, 0.0f);
+            palm.leaves.push_back({ (int)i, pivot, axis, 1.7f * (float)palm.leaves.size() });
+        } else if (name.rfind("Coco", 0) == 0) {
+            palm.followers.push_back((int)i);
+        } else if (name.rfind("Fogata_Fuego", 0) == 0) {
+            meshBounds(mesh, mn, mx);
+            glm::vec3 base(0.5f * (mn.x + mx.x), mn.y, 0.5f * (mn.z + mx.z));
+            palm.flames.push_back({ (int)i, base, 2.3f * (float)palm.flames.size() + 0.5f });
+        }
+    }
+    std::cout << "Palmera: " << palm.leaves.size() << " hojas, " << palm.followers.size()
+              << " cocos, " << palm.flames.size() << " llamas" << std::endl;
+}
+
+void updatePalm(float t)
+{
+    if (!palm.obj || palm.trunk < 0) return;
+    SceneObject& o = *palm.obj;
+
+    // Tronco: ráfagas de viento con dos senos de frecuencias distintas
+    float trunkAngle = 2.5f * sin(0.9f * t) + 1.0f * sin(2.3f * t + 1.0f);
+    glm::mat4 trunk = rotateAround(palm.trunkBase, trunkAngle, WIND_AXIS);
+    o.parts[palm.trunk] = trunk;
+    for (int c : palm.followers)
+        o.parts[c] = trunk;
+
+    // Hojas: hijas del tronco, cada una aletea con su propio desfase
+    for (const Leaf& leaf : palm.leaves) {
+        float angle = 6.0f * sin(2.5f * t + leaf.phase) + 2.0f * sin(5.3f * t + 0.7f * leaf.phase);
+        o.parts[leaf.mesh] = trunk * rotateAround(leaf.pivot, angle, leaf.axis);
+    }
+
+    // Llamas: se estiran desde su base con ruido; la emisión parpadea igual
+    for (const Flame& f : palm.flames) {
+        float n = flicker(t, f.seed);
+        float sy = 1.0f + 0.25f * n;
+        float sxz = 1.0f + 0.08f * flicker(t, f.seed + 4.0f);
+        o.parts[f.mesh] = glm::translate(glm::mat4(1.0f), f.base) *
+                          glm::scale(glm::mat4(1.0f), glm::vec3(sxz, sy, sxz)) *
+                          glm::translate(glm::mat4(1.0f), -f.base);
+        o.partEmission[f.mesh] = 0.45f + 0.2f * n;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -782,8 +938,12 @@ void updateBall(float dt)
 // Avanza todo lo que se mueve solo: balón, personajes y árbitro.
 // El balón va primero porque lee el tiempo de la animación del jugador antes de que avance;
 // además boneWorldAt cambia la pose y animateCharacter la deja como corresponde.
+float simTime = 0.0f;   // segundos de simulación (--tiempo lo adelanta para capturas)
+
 void stepSimulation(float dt)
 {
+    simTime += dt;
+    updatePalm(simTime);
     updateBall(dt);
     for (SceneObject& obj : sceneObjects)
         animateCharacter(obj, dt);
@@ -937,6 +1097,7 @@ bool Update()
     phongShader->setFloat("specularStrength", 0.25f);
     phongShader->setFloat("shininess", 32.0f);
     phongShader->setVec2("uvScale", glm::vec2(1.0f));
+    phongShader->setFloat("emission", 0.0f);
 
     skinShader->use();
     skinShader->setMat4("projection", projection);
@@ -948,6 +1109,7 @@ bool Update()
     skinShader->setFloat("specularStrength", 0.25f);
     skinShader->setFloat("shininess", 32.0f);
     skinShader->setVec2("uvScale", glm::vec2(1.0f));
+    skinShader->setFloat("emission", 0.0f);
     phongShader->use();
 
     // Piso de arena

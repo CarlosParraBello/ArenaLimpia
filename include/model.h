@@ -11,6 +11,7 @@ public:
     /*  Model Data */
     vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
     vector<Mesh> meshes;
+    vector<string> meshNames;   // Arena Limpia: nombre de cada malla (objeto de Blender)
     string directory;
     bool gammaCorrection;
 
@@ -143,6 +144,7 @@ private:
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			// cout << "Mesh: " << mesh->mName.data << endl;
             meshes.push_back(processMesh(mesh, scene));
+            meshNames.push_back(mesh->mName.C_Str());
         }
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for(unsigned int i = 0; i < node->mNumChildren; i++)

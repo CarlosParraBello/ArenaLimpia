@@ -27,9 +27,11 @@
   4. Festejo: jugadores, tecla F
   5. Marcar: árbitro, cada 8 s
   - Extra: Parado (todos los personajes animados, en reposo)
-- [ ] 5 animaciones procedurales (1 de 5):
+- [ ] 5 animaciones procedurales (3 de 5):
   1. Tiro parabólico del balón en el saque (Q) y el remate (E): gravedad, rebote en la
      arena, choque con la red, rodar hasta detenerse y giro según la velocidad
+  2. Palmera con viento: jerarquía tronco -> hojas/cocos, senos con desfase por hoja
+  3. Fuego de la fogata: escala con ruido (suma de senos) y emisión que parpadea
 
 ## Entregables
 

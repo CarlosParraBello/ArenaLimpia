@@ -350,7 +350,76 @@ for (int i = 0; i < 80; i++) {
 }
 \end{lstlisting}
 
-\pendiente{documentar las otras cuatro animaciones procedurales.}
+\subsubsection{Palmera con viento: jerarquía de transformaciones}
+\label{sec:palmera}
+El modelo de la palmera trae cada pieza como una malla separada: el tronco, seis hojas y
+tres cocos. En lugar de dibujarlo con una sola matriz, cada malla recibe su propia
+transformación, organizada como un árbol (figura~\ref{fig:jerarquia}): el tronco se mece
+desde su base y las hojas y los cocos son sus hijos, así que heredan ese movimiento; además,
+cada hoja aletea alrededor de su punto de unión con la punta del tronco.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      level distance=1.6cm, sibling distance=5.2cm,
+      every node/.style={draw, rounded corners, align=center, font=\small, fill=green!6},
+      edge from parent/.style={draw, -{Stealth[length=2mm]}}]
+    \node {Palmera\\$M_{\text{palmera}}$}
+      child { node {Tronco\\$R_{\mathbf{b}}(\theta)$ sobre la base}
+        child { node {Hoja $i$ ($\times 6$)\\$R(\theta_i)$ sobre $\mathbf{p}_i$} }
+        child { node {Cocos ($\times 3$)\\sin movimiento propio} } };
+  \end{tikzpicture}
+  \caption{Jerarquía de transformaciones de la palmera.}
+  \label{fig:jerarquia}
+\end{figure}
+
+La matriz de cada hoja es la composición de la jerarquía:
+\begin{equation}
+  M_{\text{hoja},i} = M_{\text{palmera}}\; R_{\mathbf{b}}\!\left(\theta(t)\right)\;
+  T(\mathbf{p}_i)\, R\!\left(\theta_i(t)\right)\, T(-\mathbf{p}_i),
+\end{equation}
+donde $R_{\mathbf{b}}$ es la rotación del tronco alrededor de su base $\mathbf{b}$ y
+$\mathbf{p}_i$ el punto de unión de la hoja, que se calcula al cargar como el vértice de la
+hoja más cercano a la punta del tronco. El eje de aleteo de cada hoja es horizontal y
+perpendicular a su dirección. Los ángulos se obtienen con sumas de senos de frecuencias que
+no son múltiplos entre sí, para que el viento no se vea periódico:
+\begin{align}
+  \theta(t)   &= 2.5^\circ \sin(0.9\,t) + 1^\circ \sin(2.3\,t + 1), \\
+  \theta_i(t) &= 6^\circ \sin(2.5\,t + \varphi_i) + 2^\circ \sin(5.3\,t + 0.7\,\varphi_i),
+\end{align}
+con un desfase $\varphi_i = 1.7\,i$ distinto para cada hoja.
+
+\subsubsection{Fuego de la fogata}
+\label{sec:fuego}
+La fogata tiene dos llamas (una exterior y una central). Cada una se escala desde su base
+con un ruido suave $n(t) \in [-1, 1]$, formado por tres senos de frecuencias distintas:
+\begin{equation}
+  n(t) = 0.5\sin(7.3\,t + s) + 0.3\sin(13.1\,t + 2.1\,s) + 0.2\sin(23.7\,t + 3.7\,s),
+\end{equation}
+con una semilla $s$ distinta por llama. La altura se escala por $1 + 0.25\,n(t)$ y el ancho
+por $1 + 0.08\,n'(t)$. Para que el fuego se vea encendido aunque no le dé el sol, se agregó al
+\emph{fragment shader} un término de emisión que suma el color propio de la superficie,
+\begin{equation}
+  C = (k_a + k_d)\,C_{\text{base}} + C_{\text{esp}} + e(t)\, C_{\text{base}},
+  \qquad e(t) = 0.45 + 0.2\,n(t),
+\end{equation}
+y que parpadea con el mismo ruido que la altura de la llama.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{palmera_viento}
+  \caption{Palmera con viento en cuatro instantes ($t = 0$, $0.9$, $1.8$ y $2.7$ s).}
+  \label{fig:palmera}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{fuego_parpadeo}
+  \caption{Parpadeo del fuego: la llama en $t = 0$ y en $t = 0.14$ s.}
+  \label{fig:fuego}
+\end{figure}
+
+\pendiente{documentar las otras dos animaciones procedurales.}
 
 \subsection{Iluminación y texturizado}
 La escena usa iluminación de Phong \cite{phong1975} con una luz direccional que representa
@@ -532,7 +601,7 @@ a los costados, y el muelle, el bote y el faro hacia el mar.
     Mapeo de ambiente & Cumplido (\emph{cube map}) \\
     10 animaciones simples & Pendiente \\
     5 animaciones por cuadros clave & Cumplido \\
-    5 animaciones procedurales & 1 de 5 \\
+    5 animaciones procedurales & 3 de 5 \\
     \bottomrule
   \end{tabularx}
 \end{table}

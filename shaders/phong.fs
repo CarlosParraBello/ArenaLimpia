@@ -20,6 +20,7 @@ uniform vec3  sunColor;
 uniform float ambientStrength;
 uniform float specularStrength;
 uniform float shininess;
+uniform float emission;       // 0 = normal; > 0 = la superficie brilla con su propio color (fuego)
 
 void main()
 {
@@ -41,5 +42,6 @@ void main()
     vec3 r        = reflect(-l, n);
     vec3 specular = specularStrength * pow(max(dot(v, r), 0.0), shininess) * sunColor;
 
-    FragColor = vec4((ambient + diffuse) * base.rgb + specular, base.a);
+    vec3 lit = (ambient + diffuse) * base.rgb + specular;
+    FragColor = vec4(lit + emission * base.rgb, base.a);
 }
