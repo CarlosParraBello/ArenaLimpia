@@ -103,7 +103,7 @@ proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de 
 | 70 | Lentes de sol | Carlos Parra | `CarlosParra/LentesSol/LentesSol.blend` | 9 | 2384 | 2230 | 2 |  | Propio |
 | 71 | Botiquín | Rodrigo Uribe | `CarlosParra/Medkit/Medkit.blend` | 5 | 142 | 110 | 0 |  | Original de teoría |
 | 72 | Gradas | Rodrigo Uribe | `CarlosParra/Stands/Stands.blend` | 26 | 212 | 156 | 0 |  | Original de teoría |
-| 73 | Cancha de voleibol | Leonardo Ayala y Rodrigo Uribe | `CarlosParra/VolleyballCourt/VolleyballCourt.blend` | 9 | 3961 | 84 | 3 |  | Original de teoría |
+| 73 | Cancha de voleibol | Leonardo Ayala y Rodrigo Uribe | `CarlosParra/VolleyballCourt/VolleyballCourt.blend` | 4 | 16 | 4 | 1 |  | Original de teoría |
 | 74 | Balón de voleibol (teoría) | Leonardo Ayala | `CarlosParra/VolleyballBall/VolleyballBall.blend` | 1 | 1224 | 1227 | 0 |  | Original de teoría |
 | 75 | Fogata | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 15 | 214 | 254 | 2 |  | Propio |
 | 76 | Letrero de madera | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 2 | 16 | 12 | 1 |  | Propio |
@@ -160,5 +160,6 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
 7. **Escala negativa.** `BotellaAgua.blend` y `BloqueadorSolar.blend` tienen escala negativa
    sin aplicar (Ctrl+A → Escala y recalcular normales).
 8. **Termo.** El cuerpo de la textura quedó sin pintar (negro); falta el gris metálico.
-9. **Red de la cancha de teoría.** En `VolleyballCourt.blend` la red (`Grid`, 3801 vértices) son
-   solo aristas, sin caras: en OpenGL no se dibuja. La red de Gabriel (`RedVoley`) sí tiene caras.
+9. ~~**Red de la cancha de teoría.**~~ **Resuelto.** La red de `VolleyballCourt.blend` eran solo
+   aristas y sus postes se encimaban con los de `RedVoley`. Se quitaron la red, los postes y las
+   bandas; la cancha solo trae las zonas de arena y la red de la escena es `RedVoley`.
