@@ -1,0 +1,608 @@
+% =============================================================================
+% Arena Limpia - Reporte del proyecto final (español)
+% Laboratorio de Computación Gráfica e Interacción Humano-Computadora, FI UNAM, 2027-1
+%
+% Documento vivo: se va llenando conforme avanza el proyecto. Lo marcado con \pendiente{}
+% falta por completar antes de la entrega.
+%
+% Compilar desde esta carpeta (dos veces, para referencias cruzadas):
+%     pdflatex reporte.tex && pdflatex reporte.tex
+% =============================================================================
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing                         % interlineado 1.5 (requisito)
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figuras/}}
+
+% Texto pendiente: se ve en rojo para no olvidarlo
+\newcommand{\pendiente}[1]{\textcolor{red}{[Pendiente: #1]}}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black}\itshape,
+  stringstyle=\color{orange!70!black},
+  numbers=left, numberstyle=\tiny\color{gray},
+  frame=single, framerule=0.3pt, rulecolor=\color{gray!60},
+  breaklines=true, showstringspaces=false, tabsize=4,
+  inputencoding=utf8, extendedchars=true,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Ó}{{\'O}}1 {ü}{{\"u}}1
+}
+\renewcommand{\lstlistingname}{Código}
+\renewcommand{\lstlistlistingname}{Índice de códigos}
+
+\begin{document}
+
+% -----------------------------------------------------------------------------
+% Portada
+% -----------------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  {\large Universidad Nacional Autónoma de México\par}
+  {\large Facultad de Ingeniería\par}
+  \vspace{0.5cm}
+  {\normalsize Laboratorio de Computación Gráfica e Interacción Humano-Computadora\par}
+  {\normalsize Semestre 2027-1\par}
+  \vspace{2.5cm}
+  {\Huge\bfseries Arena Limpia\par}
+  \vspace{0.3cm}
+  {\Large Torneo de Voleibol de Playa\par}
+  \vspace{0.5cm}
+  {\large Proyecto final\par}
+  \vfill
+  \begin{tabular}{l l}
+    \textbf{Autores:} & Hernández Yukioayax Gabriel \\
+                      & Parra Bello Carlos Enrique \\[0.3cm]
+    \textbf{Contacto:} & \pendiente{correos institucionales} \\[0.3cm]
+    \textbf{Profesor:} & \pendiente{nombre completo del profesor} \\[0.3cm]
+    \textbf{Fecha de entrega:} & \pendiente{fecha}
+  \end{tabular}
+  \vspace{1.5cm}
+\end{titlepage}
+
+% -----------------------------------------------------------------------------
+% Hoja de evidencias
+% -----------------------------------------------------------------------------
+\section*{Hoja de evidencias}
+\begin{tabular}{l l}
+  \textbf{Título del trabajo:} & Arena Limpia: Torneo de Voleibol de Playa \\[0.3cm]
+  \textbf{Participantes} & \textbf{Número de cuenta} \\
+  Hernández Yukioayax Gabriel & \pendiente{número de cuenta} \\
+  Parra Bello Carlos Enrique  & \pendiente{número de cuenta} \\[0.3cm]
+  \textbf{Video demostrativo:} & \pendiente{enlace al video}
+\end{tabular}
+
+\newpage
+\tableofcontents
+\newpage
+
+% -----------------------------------------------------------------------------
+\section*{Resumen}
+\addcontentsline{toc}{section}{Resumen}
+% -----------------------------------------------------------------------------
+Arena Limpia es un sistema gráfico interactivo desarrollado en C++ con OpenGL 3.3 y GLSL que
+representa un torneo de voleibol de playa en una costa. La escena reúne modelos geométricos
+propios y de otros autores colocados a escala real, un mapa de ambiente tipo \emph{cube map}
+obtenido de una fotografía panorámica de playa, iluminación de Phong con una fuente
+direccional, dos modos de cámara (libre y en tercera persona) y tres tipos de animación:
+animaciones con esqueleto basadas en cuadros clave (caminar, saque, remate, festejo y la señal
+del árbitro), y animaciones procedurales como el tiro parabólico del balón con rebotes y
+choque con la red. El usuario controla a un jugador, camina por la arena y ejecuta las
+jugadas con el teclado.
+
+\noindent\textbf{Palabras clave:} computación gráfica, OpenGL, animación esquelética,
+\emph{skinning}, cuadros clave, animación procedural, tiro parabólico, voleibol de playa.
+
+% -----------------------------------------------------------------------------
+\section{Introducción}
+% -----------------------------------------------------------------------------
+La computación gráfica interactiva combina modelado geométrico, iluminación, texturizado y
+animación para producir imágenes en tiempo real a partir de datos tridimensionales. El
+modelo de iluminación de Phong \cite{phong1975} sigue siendo la base de muchos sistemas en
+tiempo real por su bajo costo y su buena aproximación a materiales opacos y plásticos. En
+animación de personajes, la técnica dominante es la animación esquelética con
+\emph{linear blend skinning} \cite{magnenat1988}: cada vértice de la malla se deforma con un
+promedio ponderado de las transformaciones de los huesos que lo afectan, lo que permite
+animar mallas complejas moviendo pocos huesos. Las poses de los huesos se definen en cuadros
+clave e interpolando entre ellos, una práctica heredada de la animación tradicional
+\cite{lasseter1987}. Por último, la animación procedural genera el movimiento con reglas o
+leyes físicas en lugar de poses guardadas; el ejemplo clásico es el tiro parabólico, que
+describe el vuelo de un objeto bajo gravedad constante \cite{halliday2014}.
+
+El proyecto aplica estas técnicas a un tema deportivo: un torneo de voleibol de playa con su
+cancha, gradas, mesa de jueces, premiación y la vida de la playa alrededor (puesto de
+helados, salvavidas, fauna y embarcaciones). El nombre \emph{Arena Limpia} hace referencia al
+cuidado de la playa, presente en la escena con botes de basura y objetos reciclables.
+
+\pendiente{estado del arte: comparar con otros simuladores o videojuegos de voleibol de playa
+y con escenas de playa en motores gráficos, con citas.}
+
+\pendiente{análisis económico, social y ético del tema.}
+
+% -----------------------------------------------------------------------------
+\section{Metodología}
+% -----------------------------------------------------------------------------
+El desarrollo siguió las etapas de planteamiento del problema, análisis, diseño, codificación
+y pruebas. El código vive en un repositorio Git compartido por el equipo; cada cambio se
+probó compilando el programa y generando capturas de pantalla automáticas desde la línea de
+comandos (sección~\ref{sec:pruebas}).
+
+\subsection{Requerimientos}
+\begin{table}[H]
+  \centering
+  \caption{Requerimientos de hardware y software.}
+  \label{tab:requerimientos}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Elemento} & \textbf{Requerimiento} \\
+    \midrule
+    Tarjeta gráfica & Compatible con OpenGL 3.3 o superior \\
+    Sistema operativo & Windows 10 u 11 de 64 bits \\
+    Memoria & \pendiente{medir uso de memoria} \\
+    Desarrollo & Visual Studio 2026 (C++17), GLFW, GLAD, GLM, Assimp, stb\_image \\
+    Modelado y animación & Blender 5.2 con scripts de Python \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Arquitectura del programa}
+El programa es un ciclo de juego: en cada cuadro lee la entrada del usuario, avanza la
+simulación (balón, personajes y árbitro) y dibuja la escena (figura~\ref{fig:arquitectura}).
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm and 0.9cm,
+      caja/.style={draw, rounded corners, align=center, minimum height=1cm,
+                   text width=3.1cm, font=\small},
+      flecha/.style={-{Stealth[length=2.5mm]}, thick}]
+    \node[caja, fill=blue!8] (inicio) {Inicio: carga de shaders, skybox y modelos};
+    \node[caja, fill=orange!10, right=of inicio] (entrada) {Entrada: teclado y mouse};
+    \node[caja, fill=green!10, right=of entrada] (sim) {Simulación: balón, personajes, árbitro};
+    \node[caja, fill=purple!10, below=of sim] (render) {Dibujo: skybox, arena, modelos};
+    \node[caja, fill=gray!10, left=of render] (swap) {Intercambio de búferes};
+    \draw[flecha] (inicio) -- (entrada);
+    \draw[flecha] (entrada) -- (sim);
+    \draw[flecha] (sim) -- (render);
+    \draw[flecha] (render) -- (swap);
+    \draw[flecha] (swap) -- (entrada);
+  \end{tikzpicture}
+  \caption{Ciclo principal del programa (\texttt{src/main.cpp}).}
+  \label{fig:arquitectura}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \caption{Archivos principales del código.}
+  \label{tab:archivos}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Archivo} & \textbf{Contenido} \\
+    \midrule
+    \texttt{src/main.cpp} & Escena, cámaras, entrada, simulación del balón y ciclo principal \\
+    \texttt{include/skinnedmodel.h} & Carga de modelos con esqueleto y cálculo de poses \\
+    \texttt{include/model.h}, \texttt{mesh.h} & Carga y dibujo de modelos OBJ (base del curso) \\
+    \texttt{shaders/phong.vs}, \texttt{phong.fs} & Iluminación de Phong con el sol \\
+    \texttt{shaders/phong\_skinning.vs} & Deformación de la malla con los huesos \\
+    \texttt{tools/animar\_personajes.py} & Creación y exportación de las animaciones en Blender \\
+    \texttt{tools/exportar\_obj.py} & Exportación de modelos de Blender a OBJ \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Modelado y escala}
+\label{sec:escala}
+Los modelos se hicieron en Blender y se exportan a OBJ. Cada integrante modeló con sus
+propias unidades: un personaje medía 10.7 unidades de alto, una botella 0.09 y un bote 558,
+así que no se podía usar una escala única. La solución fue describir cada objeto de la escena
+por su \textbf{altura real en metros}; al cargarlo se calcula su caja envolvente y la escala
+es
+\begin{equation}
+  s = \frac{h_{\text{real}}}{y_{\max} - y_{\min}},
+\end{equation}
+y el objeto se traslada para que la base de su caja quede sobre la arena. Así, por ejemplo,
+los jugadores miden entre 1.72 y 1.85~m, el balón 0.21~m y el faro 20~m. La red se escala de
+forma no uniforme para que sus postes coincidan con el ancho de la cancha.
+
+\subsection{Cámaras}
+Se implementaron dos modelos de cámara; la tecla \textbf{V} cambia entre ellos.
+\begin{itemize}
+  \item \textbf{Cámara libre:} se mueve con W, A, S, D, sube y baja con Espacio y C, y mira con
+        el mouse (ángulos de guiñada y cabeceo).
+  \item \textbf{Tercera persona:} sigue a uno de los cuatro jugadores (teclas 1 a 4). La cámara
+        orbita alrededor del jugador a una distancia ajustable con la rueda del mouse:
+        \begin{equation}
+          \mathbf{e} = \mathbf{t} - d\,(\cos\phi\cos\theta,\ \sin\phi,\ \cos\phi\sin\theta),
+        \end{equation}
+        donde $\mathbf{t}$ es un punto a la altura de los hombros del jugador, $d$ la
+        distancia, $\theta$ la guiñada y $\phi$ el cabeceo. W, A, S, D mueven al jugador en la
+        dirección en la que mira la cámara y el jugador gira gradualmente hacia donde camina.
+\end{itemize}
+
+\subsection{Animación esquelética}
+\label{sec:esqueleto}
+Los once personajes comparten un esqueleto de 19 huesos (cadera, columna, pecho, cuello,
+cabeza, y hombro, brazo, antebrazo, mano, muslo, pierna y pie de cada lado). El formato OBJ
+no guarda huesos, así que los personajes animados se exportan a \textbf{glTF 2.0}
+\cite{gltf2021}, que guarda la malla, los pesos de cada vértice, el esqueleto y las
+animaciones. Assimp \cite{assimp} lo carga y la clase \texttt{SkinnedModel} calcula en cada
+cuadro la matriz de cada hueso:
+\begin{equation}
+  M_i = G^{-1}\, N_i(t)\, O_i,
+\end{equation}
+donde $N_i(t)$ es la transformación global del hueso en el instante $t$ (producto de las
+transformaciones de sus padres interpoladas entre cuadros clave), $O_i$ la matriz que lleva
+la malla al espacio del hueso en reposo y $G^{-1}$ la inversa de la transformación de la
+raíz. El \emph{vertex shader} deforma cada vértice con hasta cuatro huesos
+(código~\ref{lst:skinning}):
+\begin{equation}
+  \mathbf{v}' = \sum_{k=1}^{4} w_k\, M_{j_k}\, \mathbf{v}, \qquad \sum_k w_k = 1.
+\end{equation}
+
+\begin{lstlisting}[language=C, caption={Deformación de vértices con los huesos (\texttt{shaders/phong\_skinning.vs}).}, label={lst:skinning}]
+mat4 skin = gBones[int(bIDs1.x)] * bWeights1.x
+          + gBones[int(bIDs1.y)] * bWeights1.y
+          + gBones[int(bIDs1.z)] * bWeights1.z
+          + gBones[int(bIDs1.w)] * bWeights1.w;
+vec4 worldPos = model * skin * vec4(aPos, 1.0);
+Normal = mat3(transpose(inverse(model * skin))) * aNormal;
+\end{lstlisting}
+
+La clase \texttt{SkinnedModel} se basó en la clase \texttt{AnimatedModel} de la práctica de
+animación del curso, con cambios necesarios para este proyecto: numerar los huesos por
+nombre para todo el modelo, calcular normales cuando el archivo no las trae, conservar la
+transformación de los nodos sin animación, elegir la animación por nombre y medir el tiempo
+en segundos.
+
+\subsection{Animaciones por cuadros clave}
+Las animaciones se crean con el script \texttt{tools/animar\_personajes.py}, que abre el
+archivo de Blender de cada personaje sin modificarlo, define las poses en ciertos cuadros y
+exporta el resultado. Las rotaciones se escriben en los ejes del esqueleto y se convierten al
+eje local de cada hueso,
+\begin{equation}
+  q_{\text{local}} = r^{-1}\, q_{\text{esqueleto}}\, r,
+\end{equation}
+donde $r$ es la orientación del hueso en reposo. En cada cuadro clave la cadera se ajusta
+para que el pie más bajo toque el piso, y los saltos se suman en metros; así los personajes
+no flotan ni se hunden. La tabla~\ref{tab:keyframes} resume las animaciones.
+
+\begin{table}[H]
+  \centering
+  \caption{Animaciones por cuadros clave (24 cuadros por segundo).}
+  \label{tab:keyframes}
+  \begin{tabularx}{\linewidth}{l l l X}
+    \toprule
+    \textbf{Animación} & \textbf{Duración} & \textbf{Personajes} & \textbf{Cómo se activa} \\
+    \midrule
+    Caminar  & 1.00 s (ciclo) & jugadores, árbitro & Moverse en tercera persona; su velocidad depende de la del jugador \\
+    Saque    & 1.67 s & jugadores & Tecla Q \\
+    Remate   & 1.75 s & jugadores & Tecla E (incluye un salto de 0.6 m) \\
+    Festejo  & 2.42 s & jugadores & Tecla F \\
+    Marcar   & 1.58 s & árbitro   & Automática, cada 8 s \\
+    Parado   & 1.00 s (ciclo) & todos los animados & En reposo \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Para que los pies no se resbalen, la animación de caminar avanza al ritmo de los pasos: un
+ciclo cubre 1.5~m, así que su velocidad de reproducción es $v / 1.5$ ciclos por segundo.
+
+\subsection{Animaciones procedurales}
+\subsubsection{Tiro parabólico del balón}
+\label{sec:tiro}
+En el saque el balón sigue la mano izquierda del jugador; su posición se obtiene del hueso
+\texttt{mano.L} en la pose actual. Al lanzarlo, y otra vez al golpearlo, se calcula la
+velocidad inicial $\mathbf{v}_0$ que lleva el balón de $\mathbf{p}_0$ a $\mathbf{p}_1$ en un
+tiempo $T$, despejando la ecuación del tiro parabólico:
+\begin{equation}
+  \mathbf{p}_1 = \mathbf{p}_0 + \mathbf{v}_0 T + \tfrac{1}{2}\mathbf{g}T^2
+  \quad\Longrightarrow\quad
+  \mathbf{v}_0 = \frac{\mathbf{p}_1 - \mathbf{p}_0}{T} - \tfrac{1}{2}\mathbf{g}T.
+\end{equation}
+En el lanzamiento, $\mathbf{p}_1$ es la posición que tendrá la mano derecha en el cuadro del
+golpe, así que el balón llega a la mano exactamente cuando la animación lo golpea. En el
+remate el balón llega como un pase desde un costado. Después del golpe, el balón se integra
+cada cuadro con la solución exacta para aceleración constante,
+\begin{equation}
+  \mathbf{p} \leftarrow \mathbf{p} + \mathbf{v}\,\Delta t + \tfrac{1}{2}\mathbf{g}\,\Delta t^2,
+  \qquad \mathbf{v} \leftarrow \mathbf{v} + \mathbf{g}\,\Delta t,
+\end{equation}
+y se resuelven tres contactos: con la arena rebota conservando el 55\% de la velocidad
+vertical y el 75\% de la horizontal, y rueda frenando hasta detenerse; si cruza el plano de la
+red a la altura de la red, rebota hacia atrás. El balón gira alrededor del eje perpendicular a
+su velocidad horizontal con velocidad angular $\omega = |\mathbf{v}_h| / r$.
+
+Si el tiro calculado chocaría con la red, una ayuda de puntería primero lo alarga manteniendo
+la rapidez horizontal y, si no basta, aumenta $T$ para darle más parábola
+(código~\ref{lst:tiro}).
+
+\begin{lstlisting}[language=C++, caption={Velocidad del tiro y ayuda de puntería (\texttt{src/main.cpp}).}, label={lst:tiro}]
+glm::vec3 launchVelocity(const glm::vec3& from, const glm::vec3& to, float T)
+{
+    return (to - from) / T - 0.5f * GRAVITY * T;
+}
+
+for (int i = 0; i < 80; i++) {
+    to = origin + forward * distance;
+    v = launchVelocity(from, to, T);
+    if (clearsNet(from, v)) break;
+    if (distance < maxDistance) { distance += 0.5f; T = distance / speed; }
+    else                        { T += 0.05f; }
+}
+\end{lstlisting}
+
+\pendiente{documentar las otras cuatro animaciones procedurales.}
+
+\subsection{Iluminación y texturizado}
+La escena usa iluminación de Phong \cite{phong1975} con una luz direccional que representa
+al sol, con componentes ambiental, difusa y especular. El fondo es un \emph{cube map}
+generado a partir de la fotografía panorámica \emph{Spiaggia di Mondello} \cite{mondello},
+rotada para que el sol de la foto coincida con la dirección de la luz de la escena. Los
+personajes animados usan la misma iluminación que el resto de la escena.
+
+\pendiente{segunda técnica de iluminación (por ejemplo, Fresnel para materiales traslúcidos y
+metálicos), materiales opacos, plásticos, traslúcidos y metálicos, y texturizado de la arena.}
+
+\subsection{Modelos y estadísticas}
+La escena tiene 59 objetos colocados que usan 57 modelos distintos (las gradas y las bancas se
+reutilizan). El inventario completo, con autor, número de piezas, vértices, caras, texturas y
+origen de cada modelo, está en \texttt{docs/modelos.md}; la tabla~\ref{tab:modelos} lo resume.
+
+\begin{table}[H]
+  \centering
+  \caption{Resumen de modelos registrados (al 5 de noviembre de 2026).}
+  \label{tab:modelos}
+  \begin{tabular}{l r r r}
+    \toprule
+    \textbf{Autor} & \textbf{Originales} & \textbf{Externos} & \textbf{Total} \\
+    \midrule
+    Parra Bello Carlos Enrique     & 33 & 0 & 33 \\
+    Hernández Yukioayax Gabriel    & 32 & 8 & 40 \\
+    Proyecto de teoría (Uribe, Ayala) & 4 & 0 & 4 \\
+    \midrule
+    \textbf{Total} & \textbf{69} & \textbf{8} & \textbf{77} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\pendiente{actualizar al llegar a 80 modelos e incluir la tabla completa de estadísticas.}
+
+\subsection{Interacción}
+\pendiente{15 objetos interactivos.}
+
+\subsection{Pruebas}
+\label{sec:pruebas}
+Para revisar cada cambio sin abrir la ventana, el programa acepta opciones de línea de
+comandos que dibujan unos cuadros, guardan una captura y terminan:
+\texttt{--captura} (archivo de salida), \texttt{--camara} (posición y orientación),
+\texttt{--tercera} (seguir a un jugador), \texttt{--pose} (fijar una animación en un instante)
+y \texttt{--simular} (ejecutar un saque o remate y adelantar la simulación, imprimiendo la
+trayectoria del balón). Las figuras de este reporte se obtuvieron así.
+
+% -----------------------------------------------------------------------------
+\section{Experimentos}
+% -----------------------------------------------------------------------------
+\subsection{Postes dobles en la red}
+Al cargar todos los modelos juntos se vieron dos pares de postes en la red: los de la cancha
+del proyecto de teoría y los de la red de Gabriel (figura~\ref{fig:postes}a). Además, la red
+de la cancha de teoría era solo una malla de aristas sin caras, que OpenGL no dibuja. Se
+quitaron del archivo de la cancha los postes, las bandas y esa malla, y la red de la escena
+quedó siendo la de Gabriel (figura~\ref{fig:postes}b).
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{exp_postes_dobles_antes}
+    \caption{Antes: postes de la cancha y de la red.}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{exp_postes_dobles_despues}
+    \caption{Después: solo la red de Gabriel.}
+  \end{subfigure}
+  \caption{Experimento: postes dobles en la red.}
+  \label{fig:postes}
+\end{figure}
+
+\subsection{Formato para personajes con esqueleto: FBX contra glTF}
+La práctica de animación del curso carga personajes en FBX. En una práctica anterior se
+comprobó que los FBX exportados por Blender 5 llegan a Assimp sin normales y el cargador del
+curso falla al leerlas. Por eso se eligió glTF 2.0, que exporta normales, pesos y animaciones,
+y además se agregó al cargador el cálculo de normales cuando faltan.
+\textbf{Resultado:} exitoso con glTF.
+
+\subsection{Esqueleto oculto que no se exportaba}
+La primera exportación a glTF produjo un archivo con la malla pero sin esqueleto ni
+animación. La causa fue que el esqueleto estaba oculto en el archivo de Blender y el
+exportador omite los objetos ocultos. El script ahora hace visible el esqueleto antes de
+exportar. \textbf{Resultado:} corregido.
+
+\subsection{Pies que flotaban al caminar}
+En la primera versión del ciclo de caminar, la cadera subía cuando las piernas estaban más
+abiertas; como al abrir las piernas los pies suben, el personaje parecía flotar a medio paso
+(figura~\ref{fig:pies}a). Se cambió el método: en cada cuadro clave se mide el punto más bajo
+de los pies y se mueve la cadera para que toque el piso (figura~\ref{fig:pies}b).
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{exp_pies_flotando}
+    \caption{Antes: el jugador flota a medio paso.}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.48\linewidth}
+    \includegraphics[width=\linewidth]{exp_pies_contacto}
+    \caption{Después: el pie de apoyo toca la arena.}
+  \end{subfigure}
+  \caption{Experimento: contacto de los pies con el piso.}
+  \label{fig:pies}
+\end{figure}
+
+\subsection{Remate que pasaba por debajo de la red}
+En la primera prueba del remate, el contacto con el balón quedaba a 2.0~m porque en el cuadro
+del golpe el brazo ya iba hacia abajo, y el balón cruzaba el plano de la red a 1.0~m, por
+debajo de ella. Se subió el brazo en ese cuadro (contacto a 2.6~m) y se agregó una ayuda de
+puntería. La primera versión de la ayuda solo alargaba el tiempo de vuelo y el remate se
+volvió un globo lento que subía a 3.7~m; la versión final primero alarga la distancia
+manteniendo la rapidez y solo después eleva la parábola (sección~\ref{sec:tiro}). Con el
+jugador a 4.5~m de la red, el remate sale a unos 13~m/s y cruza la red a 2.8~m.
+
+% -----------------------------------------------------------------------------
+\section{Resultados}
+% -----------------------------------------------------------------------------
+La figura~\ref{fig:general} muestra la escena completa y la figura~\ref{fig:aerea} su
+distribución vista desde arriba: la cancha al centro, las gradas a los lados, la mesa de
+jueces y la entrada al frente, el podio al fondo, la zona de descanso y el puesto de helados
+a los costados, y el muelle, el bote y el faro hacia el mar.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{vista_general}
+  \caption{Vista general de la escena con la cámara libre.}
+  \label{fig:general}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{vista_aerea}
+  \caption{Distribución de la escena vista desde arriba.}
+  \label{fig:aerea}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{camara_tercera_persona}
+  \caption{Cámara en tercera persona siguiendo al jugador de México.}
+  \label{fig:tercera}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{caminar_jugadores}
+  \caption{Los cuatro jugadores en la animación de caminar.}
+  \label{fig:caminar}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{animaciones_keyframes}
+  \caption{Cuadros de las animaciones por cuadros clave. Filas: saque visto de lado, saque de
+  frente, remate de lado, y festejo de frente con la señal del árbitro.}
+  \label{fig:keyframes}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{tiro_parabolico}
+  \caption{Tiro parabólico del balón en el saque (arriba) y el remate (abajo), en distintos
+  instantes de la animación.}
+  \label{fig:tiro}
+\end{figure}
+
+\begin{table}[H]
+  \centering
+  \caption{Avance de los requisitos del proyecto.}
+  \label{tab:avance}
+  \begin{tabularx}{\linewidth}{X l}
+    \toprule
+    \textbf{Requisito} & \textbf{Estado} \\
+    \midrule
+    80 modelos (al menos 80\% originales) & 77 de 80 \\
+    2 modelos de cámara & Cumplido \\
+    15 objetos interactivos & Pendiente \\
+    Materiales opacos, plásticos, traslúcidos y metálicos & Pendiente \\
+    2 técnicas de iluminación & 1 de 2 (Phong) \\
+    Mapeo de ambiente & Cumplido (\emph{cube map}) \\
+    10 animaciones simples & Pendiente \\
+    5 animaciones por cuadros clave & Cumplido \\
+    5 animaciones procedurales & 1 de 5 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\pendiente{discusión de resultados comparada con otros desarrollos; ventajas y desventajas de
+la metodología.}
+
+% -----------------------------------------------------------------------------
+\section{Conclusiones}
+% -----------------------------------------------------------------------------
+\subsection*{Hernández Yukioayax Gabriel}
+\pendiente{conclusión individual.}
+
+\subsection*{Parra Bello Carlos Enrique}
+\pendiente{conclusión individual.}
+
+% -----------------------------------------------------------------------------
+\section*{Uso de inteligencia artificial}
+\addcontentsline{toc}{section}{Uso de inteligencia artificial}
+% -----------------------------------------------------------------------------
+Se usó el asistente Claude (Anthropic) como apoyo en el desarrollo: en los scripts de Python
+para Blender (exportación de modelos, esqueleto de los personajes y creación de las
+animaciones), en el código de carga de modelos con esqueleto, en la simulación del balón y en
+la redacción de este documento. El uso de IA en los modelos se detalla en la sección
+``Uso de IA'' de \texttt{docs/modelos.md}. Todo el contenido fue revisado y ajustado por los
+autores.
+
+% -----------------------------------------------------------------------------
+\begin{thebibliography}{9}
+\addcontentsline{toc}{section}{Referencias}
+% Formato APA 7. Ordenadas alfabéticamente por autor.
+
+\bibitem{assimp}
+Assimp Team. (2024). \emph{Open Asset Import Library (Assimp)} [Software].
+\url{https://github.com/assimp/assimp}
+
+\bibitem{blender}
+Blender Foundation. (2026). \emph{Blender} (Versión 5.2) [Software].
+\url{https://www.blender.org}
+
+\bibitem{devries2020}
+de Vries, J. (2020). \emph{Learn OpenGL: Learn modern OpenGL graphics programming in a
+step-by-step fashion}. Kendall \& Welles. \url{https://learnopengl.com}
+
+\bibitem{halliday2014}
+Halliday, D., Resnick, R., \& Walker, J. (2014). \emph{Fundamentals of physics} (10.ª ed.).
+Wiley.
+
+\bibitem{gltf2021}
+Khronos Group. (2021). \emph{glTF 2.0 specification}.
+\url{https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html}
+
+\bibitem{lasseter1987}
+Lasseter, J. (1987). Principles of traditional animation applied to 3D computer animation.
+\emph{ACM SIGGRAPH Computer Graphics, 21}(4), 35--44.
+\url{https://doi.org/10.1145/37402.37407}
+
+\bibitem{magnenat1988}
+Magnenat-Thalmann, N., Laperrière, R., \& Thalmann, D. (1988). Joint-dependent local
+deformations for hand animation and object grasping. En \emph{Proceedings of Graphics
+Interface '88} (pp. 26--33). Canadian Information Processing Society.
+
+\bibitem{mondello}
+Mischok, A. (s.f.). \emph{Spiaggia di Mondello} [Imagen HDRI, licencia CC0]. Poly Haven.
+\url{https://polyhaven.com/a/spiaggia_di_mondello}
+
+\bibitem{phong1975}
+Phong, B. T. (1975). Illumination for computer generated pictures. \emph{Communications of
+the ACM, 18}(6), 311--317. \url{https://doi.org/10.1145/360825.360839}
+
+\end{thebibliography}
+
+\end{document}

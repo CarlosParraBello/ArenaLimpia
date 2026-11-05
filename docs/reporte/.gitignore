@@ -1,0 +1,9 @@
+# Archivos generados al compilar (pdflatex reporte.tex)
+*.aux
+*.log
+*.toc
+*.out
+*.lof
+*.lot
+*.synctex.gz
+reporte.pdf
