@@ -103,11 +103,13 @@
     <ClInclude Include="include\model.h" />
     <ClInclude Include="include\modelstructs.h" />
     <ClInclude Include="include\shader_m.h" />
+    <ClInclude Include="include\skinnedmodel.h" />
     <ClInclude Include="include\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\phong.vs" />
     <None Include="shaders\phong.fs" />
+    <None Include="shaders\phong_skinning.vs" />
     <None Include="shaders\skybox.vs" />
     <None Include="shaders\skybox.fs" />
   </ItemGroup>

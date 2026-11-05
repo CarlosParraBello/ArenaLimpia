@@ -33,6 +33,7 @@
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
 *   --camara x y z yaw pitch  posición y orientación inicial de la cámara
 *   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
+*   --caminando <s>           fija la pose de "Caminar" en el segundo s (personajes animados)
 */
 
 #include <iostream>
@@ -59,6 +60,7 @@
 #include <camera.h>
 #include <model.h>
 #include <cubemap.h>
+#include <skinnedmodel.h>
 
 namespace fs = std::filesystem;
 
@@ -113,8 +115,9 @@ float orbitPitch     = 20.0f;    // grados, positivo = cámara por encima
 float orbitDistance  = 5.0f;     // metros
 const float ORBIT_MIN_DISTANCE = 2.0f;
 const float ORBIT_MAX_DISTANCE = 15.0f;
-const float PLAYER_SPEED       = 3.0f;   // m/s caminando
-const float PLAYER_SPEED_RUN   = 6.5f;   // m/s corriendo (Shift)
+const float PLAYER_SPEED       = 2.0f;   // m/s caminando
+const float PLAYER_SPEED_RUN   = 4.5f;   // m/s corriendo (Shift)
+const float WALK_CYCLE_METERS  = 1.5f;   // distancia que avanza un ciclo de "Caminar" (dos pasos)
 const float PLAYER_TURN_SPEED  = 540.0f; // grados/s
 const float WORLD_LIMIT        = 55.0f;  // el piso mide 120 x 120 m
 glm::vec3 thirdPersonEye(0.0f);
@@ -129,6 +132,7 @@ glm::vec3 sunColor(1.0f, 0.97f, 0.9f);
 // Escena
 // ---------------------------------------------------------------------------
 Shader*  phongShader  = nullptr;
+Shader*  skinShader   = nullptr;   // phong con skinning para personajes animados
 Shader*  skyboxShader = nullptr;
 CubeMap* skybox       = nullptr;
 Mesh*    ground       = nullptr;
@@ -146,6 +150,11 @@ struct SceneObject {
     float height;      // metros
     glm::vec3 stretch = glm::vec3(1.0f);
     Model* model = nullptr;
+    // Personajes con esqueleto (animado/<Modelo>.gltf): se dibujan con skinning
+    SkinnedModel* skinned = nullptr;
+    int   animIdle = -1, animWalk = -1;
+    float animTime = 0.0f;   // segundos dentro de la animación actual
+    float speed    = 0.0f;   // m/s en este cuadro (0 = parado)
     glm::vec3 boundsMin = glm::vec3(0.0f);
     glm::vec3 boundsMax = glm::vec3(0.0f);
 };
@@ -240,6 +249,7 @@ std::vector<SceneObject> sceneObjects = {
 
 // Modo de captura para pruebas automáticas
 std::string capturePath;
+float forcedWalkTime = -1.0f;   // --caminando <s>: fija la pose de caminar (para capturas)
 int frameCount = 0;
 
 // ---------------------------------------------------------------------------
@@ -256,6 +266,8 @@ int main(int argc, char** argv)
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
         }
+        else if (arg == "--caminando" && i + 1 < argc)
+            forcedWalkTime = std::stof(argv[++i]);
         else if (arg == "--tercera") {
             cameraMode = CameraMode::ThirdPerson;
             if (i + 1 < argc && argv[i + 1][0] >= '1' && argv[i + 1][0] <= '4')
@@ -331,6 +343,11 @@ Mesh* createGround(float halfSize, glm::vec4 color)
 
 void computeBounds(SceneObject& obj)
 {
+    if (obj.skinned) {
+        obj.boundsMin = obj.skinned->boundsMin;
+        obj.boundsMax = obj.skinned->boundsMax;
+        return;
+    }
     glm::vec3 mn(FLT_MAX), mx(-FLT_MAX);
     for (const Mesh& mesh : obj.model->meshes) {
         for (const Vertex& v : mesh.vertices) {
@@ -378,6 +395,7 @@ bool Start()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     phongShader  = new Shader("shaders/phong.vs", "shaders/phong.fs");
+    skinShader   = new Shader("shaders/phong_skinning.vs", "shaders/phong.fs");
     skyboxShader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
 
     std::vector<std::string> faces = {
@@ -397,6 +415,25 @@ bool Start()
     std::map<std::string, Model*> loaded;
     double tTotal = glfwGetTime();
     for (SceneObject& obj : sceneObjects) {
+        // ¿Tiene versión con esqueleto? assets/.../<Modelo>/animado/<Modelo>.gltf
+        fs::path animPath = fs::path(obj.path).parent_path() / "animado" /
+                            (fs::path(obj.path).stem().string() + ".gltf");
+        if (fs::exists(animPath)) {
+            double t0 = glfwGetTime();
+            std::cout << "Modelo animado " << obj.name << ":" << std::endl;
+            SkinnedModel* sk = new SkinnedModel(animPath.generic_string());
+            if (sk->valid()) {
+                obj.skinned  = sk;
+                obj.animIdle = sk->findAnimation("Parado");
+                obj.animWalk = sk->findAnimation("Caminar");
+                if (obj.animIdle >= 0) sk->setPose(obj.animIdle, 0.0f);
+                computeBounds(obj);
+                std::cout << "  " << (glfwGetTime() - t0) << " s" << std::endl;
+                continue;
+            }
+            delete sk;
+        }
+
         auto it = loaded.find(obj.path);
         if (it != loaded.end()) {
             obj.model = it->second;
@@ -429,8 +466,39 @@ void drawObject(const SceneObject& obj)
     model = glm::scale(model, scale * obj.stretch);
     model = glm::translate(model, -pivot);
 
-    phongShader->setMat4("model", model);
-    obj.model->Draw(*phongShader);
+    if (obj.skinned) {
+        skinShader->use();
+        skinShader->setMat4("model", model);
+        obj.skinned->Draw(*skinShader);
+        phongShader->use();
+    } else {
+        phongShader->setMat4("model", model);
+        obj.model->Draw(*phongShader);
+    }
+}
+
+// Elige "Caminar" o "Parado" según la velocidad y avanza el tiempo de la animación.
+// Al caminar, la animación va al ritmo de los pasos para que los pies no se resbalen.
+
+void animateCharacter(SceneObject& obj, float dt)
+{
+    SkinnedModel* sk = obj.skinned;
+    if (!sk) return;
+
+    if (forcedWalkTime >= 0.0f && obj.animWalk >= 0) {
+        sk->setPose(obj.animWalk, forcedWalkTime);
+        return;
+    }
+
+    bool walking = obj.speed > 0.05f && obj.animWalk >= 0;
+    int anim = walking ? obj.animWalk : obj.animIdle;
+    if (anim < 0) return;
+
+    if (walking)
+        obj.animTime += dt * (obj.speed / WALK_CYCLE_METERS) * sk->duration(anim);
+    else
+        obj.animTime += dt;
+    sk->setPose(anim, obj.animTime);
 }
 
 // ---------------------------------------------------------------------------
@@ -496,7 +564,8 @@ void movePlayer(GLFWwindow* window)
     move = glm::normalize(move);
 
     bool run = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-    player->position += move * (run ? PLAYER_SPEED_RUN : PLAYER_SPEED) * deltaTime;
+    player->speed = run ? PLAYER_SPEED_RUN : PLAYER_SPEED;
+    player->position += move * player->speed * deltaTime;
     player->position.x = glm::clamp(player->position.x, -WORLD_LIMIT, WORLD_LIMIT);
     player->position.z = glm::clamp(player->position.z, -WORLD_LIMIT, WORLD_LIMIT);
 
@@ -523,7 +592,11 @@ bool Update()
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
+    for (SceneObject& obj : sceneObjects)
+        obj.speed = 0.0f;
     processInput(window);
+    for (SceneObject& obj : sceneObjects)
+        animateCharacter(obj, deltaTime);
 
     glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -557,6 +630,18 @@ bool Update()
     phongShader->setFloat("shininess", 32.0f);
     phongShader->setVec2("uvScale", glm::vec2(1.0f));
 
+    skinShader->use();
+    skinShader->setMat4("projection", projection);
+    skinShader->setMat4("view", view);
+    skinShader->setVec3("viewPos", eye);
+    skinShader->setVec3("sunDirection", sunDirection);
+    skinShader->setVec3("sunColor", sunColor);
+    skinShader->setFloat("ambientStrength", 0.35f);
+    skinShader->setFloat("specularStrength", 0.25f);
+    skinShader->setFloat("shininess", 32.0f);
+    skinShader->setVec2("uvScale", glm::vec2(1.0f));
+    phongShader->use();
+
     // Piso de arena
     phongShader->setMat4("model", glm::mat4(1.0f));
     ground->Draw(*phongShader);
@@ -580,10 +665,13 @@ bool Update()
 void Shutdown()
 {
     std::set<Model*> unique;
-    for (SceneObject& obj : sceneObjects)
-        unique.insert(obj.model);
+    for (SceneObject& obj : sceneObjects) {
+        if (obj.model) unique.insert(obj.model);
+        delete obj.skinned;
+    }
     for (Model* m : unique)
         delete m;
+    delete skinShader;
     delete ground;
     delete skybox;
     delete phongShader;
