@@ -18,10 +18,14 @@ Actualizado el 2026-11-04.
 
 | | Originales | Externos | Total |
 |---|---|---|---|
-| Carlos Parra | 26 | 0 | 26 |
+| Carlos Parra | 30 | 0 | 30 |
 | Gabriel Yukio | 32 | 8 | 40 |
-| **Total registrado** | **58 de 64** | **8 de 16** | **66 de 80** |
-| Faltan | 6 | 8 | 14 |
+| Proyecto de teoría (Rodrigo Uribe, Leonardo Ayala) | 4 | 0 | 4 |
+| **Total registrado** | **66 de 64** | **8 de 16** | **74 de 80** |
+| Faltan | 0 | — | 6 |
+
+"Original de teoría": modelos originales hechos por Rodrigo Uribe y Leonardo Ayala para el
+proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de otra fuente.
 
 ## Modelos
 
@@ -93,14 +97,14 @@ Actualizado el 2026-11-04.
 | 64 | Bote de pesca | Gabriel Yukio | `GabrielYukioayax/Bote/Boat Texture 1.obj` | — | — | — | 1 | Opaco | Externo: Poly by Google, *Boat*, CC-BY |
 | 65 | Muelle | Gabriel Yukio | `GabrielYukioayax/Puerto/Puerto.blend` | — | — | — | — | Opaco | Externo: Quaternius, *Port*, CC0 |
 | 66 | Faro | Gabriel Yukio | `GabrielYukioayax/Faro/Lighthouse singly.obj` | — | — | — | 1 | Opaco | Externo: Poly by Google, *Lighthouse*, CC-BY |
-| 67 |  |  |  |  |  |  |  |  |  |
-| 68 |  |  |  |  |  |  |  |  |  |
-| 69 |  |  |  |  |  |  |  |  |  |
-| 70 |  |  |  |  |  |  |  |  |  |
-| 71 |  |  |  |  |  |  |  |  |  |
-| 72 |  |  |  |  |  |  |  |  |  |
-| 73 |  |  |  |  |  |  |  |  |  |
-| 74 |  |  |  |  |  |  |  |  |  |
+| 67 | Sombrilla | Carlos Parra | `CarlosParra/Sombrilla/Sombrilla.blend` | 1 | 110 | 120 | 1 |  | Propio |
+| 68 | Botella de plástico | Carlos Parra | `CarlosParra/BotellaPlastico/BotellaPlastico.blend` | 2 | 770 | 770 | 3 |  | Propio |
+| 69 | Gorra | Carlos Parra | `CarlosParra/Gorra/Gorra.blend` | 3 | 1168 | 1226 | 3 |  | Propio |
+| 70 | Lentes de sol | Carlos Parra | `CarlosParra/LentesSol/LentesSol.blend` | 9 | 2384 | 2230 | 2 |  | Propio |
+| 71 | Botiquín | Rodrigo Uribe | `CarlosParra/Medkit/Medkit.blend` | 5 | 142 | 110 | 0 |  | Original de teoría |
+| 72 | Gradas | Rodrigo Uribe | `CarlosParra/Stands/Stands.blend` | 26 | 212 | 156 | 0 |  | Original de teoría |
+| 73 | Cancha de voleibol | Leonardo Ayala y Rodrigo Uribe | `CarlosParra/VolleyballCourt/VolleyballCourt.blend` | 9 | 3961 | 84 | 3 |  | Original de teoría |
+| 74 | Balón de voleibol (teoría) | Leonardo Ayala | `CarlosParra/VolleyballBall/VolleyballBall.blend` | 1 | 1224 | 1227 | 0 |  | Original de teoría |
 | 75 |  |  |  |  |  |  |  |  |  |
 | 76 |  |  |  |  |  |  |  |  |  |
 | 77 |  |  |  |  |  |  |  |  |  |
@@ -139,8 +143,9 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
    pelo y tono de piel distintos, y la niña y el niño tienen otras proporciones.
 2. **Rocas.** Las 9 rocas de `CosasDePlaya.blend` son la misma malla escalada; se registran
    como un solo modelo.
-3. **Sin material.** `Palmera.blend` (las 11 piezas) y la taza y el plato de
-   `PuestoHeladosBanca.blend` no tienen material ni textura; en OpenGL salen grises.
+3. **Sin material.** `Palmera.blend` (las 11 piezas), `Medkit.blend` (las 5 piezas) y la taza
+   y el plato de `PuestoHeladosBanca.blend` no tienen material ni textura; en OpenGL salen
+   grises. `Stands.blend` y `VolleyballBall.blend` solo tienen color, sin imagen.
 4. **Materiales procedurales.** 13 materiales de `PuestoHeladosBanca.blend` (Verde_Texturizado,
    Madera, Azul_Terciopelo, etc.) son procedurales y no tienen imagen. Al exportar a OBJ,
    `tools/exportar_obj.py` usa en su lugar las imágenes `*_Bake.png` de
@@ -155,3 +160,5 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
 7. **Escala negativa.** `BotellaAgua.blend` y `BloqueadorSolar.blend` tienen escala negativa
    sin aplicar (Ctrl+A → Escala y recalcular normales).
 8. **Termo.** El cuerpo de la textura quedó sin pintar (negro); falta el gris metálico.
+9. **Red de la cancha de teoría.** En `VolleyballCourt.blend` la red (`Grid`, 3801 vértices) son
+   solo aristas, sin caras: en OpenGL no se dibuja. La red de Gabriel (`RedVoley`) sí tiene caras.
