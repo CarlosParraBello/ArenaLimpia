@@ -1,2 +1,102 @@
 # Blender 5.2.2 LTS MTL File: 'Palmera.blend'
 # www.blender.org
+
+newmtl Fuego_Amarillo
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 0.450000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 1.200000 0.540000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Fuego_Naranja
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 0.100000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.600000 0.060000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Letrero_Madera
+Ns 22.499992
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -o 0.5 0.5 0.5 textures/letrero_madera.png
+
+newmtl Letrero_Madera_Poste
+Ns 22.499992
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 1.2 1.2 1.2 textures/letrero_madera.png
+
+newmtl Palmera_Coco
+Ns 39.999996
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 8 8 8 textures/palmera_coco.png
+
+newmtl Palmera_Hoja
+Ns 159.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/palmera_hoja.png
+
+newmtl Palmera_Tronco
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 1.5 1.5 1.5 textures/palmera_tronco.png
+
+newmtl Roca
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -s 12 12 12 textures/roca.png
+
+newmtl Tronco_Anillos
+Ns 22.499992
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/tronco_anillos.png
+
+newmtl Tronco_Corteza
+Ns 10.000005
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd textures/tronco_corteza.png

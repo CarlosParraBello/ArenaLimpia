@@ -12,17 +12,17 @@ Los modelos de otros autores o generados con IA deben indicar su fuente original
 - **Origen:** propio, mixto (con apoyo de IA; ver "Uso de IA") o externo con su fuente.
 - Las rutas son relativas a `assets/models/`.
 
-Actualizado el 2026-11-04.
+Actualizado el 2026-11-05.
 
 ## Resumen
 
 | | Originales | Externos | Total |
 |---|---|---|---|
-| Carlos Parra | 30 | 0 | 30 |
+| Carlos Parra | 33 | 0 | 33 |
 | Gabriel Yukio | 32 | 8 | 40 |
 | Proyecto de teoría (Rodrigo Uribe, Leonardo Ayala) | 4 | 0 | 4 |
-| **Total registrado** | **66 de 64** | **8 de 16** | **74 de 80** |
-| Faltan | 0 | — | 6 |
+| **Total registrado** | **69 de 64** | **8 de 16** | **77 de 80** |
+| Faltan | 0 | — | 3 |
 
 "Original de teoría": modelos originales hechos por Rodrigo Uribe y Leonardo Ayala para el
 proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de otra fuente.
@@ -45,7 +45,7 @@ proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de 
 | 12 | Cubeta | Carlos Parra | `CarlosParra/Cubeta/Cubeta.blend` | 2 | 128 | 113 | 1 |  | Propio |
 | 13 | Globo | Carlos Parra | `CarlosParra/Globo/Globo.blend` | 3 | 2370 | 2596 | 2 |  | Propio |
 | 14 | Mesa de jugadores | Carlos Parra | `CarlosParra/MesaJugadores/MesaJugadores.blend` | 5 | 280 | 222 | 2 |  | Propio |
-| 15 | Palmera | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 11 | 635 | 580 | 0 |  | Propio |
+| 15 | Palmera | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 10 | 1050 | 1166 | 3 |  | Propio |
 | 16 | Podio | Carlos Parra | `CarlosParra/Podio/Podio.blend` | 3 | 24 | 18 | 3 |  | Propio |
 | 17 | Carrito de helados | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 31 | 920 | 522 | 0 |  | Propio |
 | 18 | Cono de helado (chocolate y fresa) | Carlos Parra | `CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.blend` | 6 | 2212 | 2228 | 0 |  | Propio |
@@ -105,9 +105,9 @@ proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de 
 | 72 | Gradas | Rodrigo Uribe | `CarlosParra/Stands/Stands.blend` | 26 | 212 | 156 | 0 |  | Original de teoría |
 | 73 | Cancha de voleibol | Leonardo Ayala y Rodrigo Uribe | `CarlosParra/VolleyballCourt/VolleyballCourt.blend` | 9 | 3961 | 84 | 3 |  | Original de teoría |
 | 74 | Balón de voleibol (teoría) | Leonardo Ayala | `CarlosParra/VolleyballBall/VolleyballBall.blend` | 1 | 1224 | 1227 | 0 |  | Original de teoría |
-| 75 |  |  |  |  |  |  |  |  |  |
-| 76 |  |  |  |  |  |  |  |  |  |
-| 77 |  |  |  |  |  |  |  |  |  |
+| 75 | Fogata | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 15 | 214 | 254 | 2 |  | Propio |
+| 76 | Letrero de madera | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 2 | 16 | 12 | 1 |  | Propio |
+| 77 | Tronco para sentarse | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 3 | 96 | 54 | 2 |  | Propio |
 | 78 |  |  |  |  |  |  |  |  |  |
 | 79 |  |  |  |  |  |  |  |  |  |
 | 80 |  |  |  |  |  |  |  |  |  |
@@ -143,7 +143,7 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
    pelo y tono de piel distintos, y la niña y el niño tienen otras proporciones.
 2. **Rocas.** Las 9 rocas de `CosasDePlaya.blend` son la misma malla escalada; se registran
    como un solo modelo.
-3. **Sin material.** `Palmera.blend` (las 11 piezas), `Medkit.blend` (las 5 piezas) y la taza
+3. **Sin material.** `Medkit.blend` (las 5 piezas) y la taza
    y el plato de `PuestoHeladosBanca.blend` no tienen material ni textura; en OpenGL salen
    grises. `Stands.blend` y `VolleyballBall.blend` solo tienen color, sin imagen.
 4. **Materiales procedurales.** 13 materiales de `PuestoHeladosBanca.blend` (Verde_Texturizado,
