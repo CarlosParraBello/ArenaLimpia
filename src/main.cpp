@@ -19,6 +19,7 @@
 *
 * Argumentos opcionales (para pruebas):
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
+*   --camara x y z yaw pitch  posición y orientación inicial de la cámara
 */
 
 #include <iostream>
@@ -26,6 +27,8 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <map>
+#include <set>
 #include <ctime>
 #include <cfloat>
 
@@ -73,7 +76,7 @@ float lastFrame = 0.0f;
 // ---------------------------------------------------------------------------
 // Cámara libre
 // ---------------------------------------------------------------------------
-Camera camera(glm::vec3(0.0f, 2.0f, 14.0f));
+Camera camera(glm::vec3(0.0f, 7.0f, 26.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -15.0f);
 float lastX = 0.0f;
 float lastY = 0.0f;
 bool firstMouse = true;
@@ -96,30 +99,107 @@ CubeMap* skybox       = nullptr;
 Mesh*    ground       = nullptr;
 
 // Un objeto de la escena: un modelo con su transformación.
-// Al cargar se calcula la caja envolvente para apoyar el modelo sobre la arena.
+// Los modelos no comparten unidades (ver docs/modelos.md), así que en lugar de una escala
+// se da la altura real en metros y la escala se calcula con la caja envolvente.
+// "stretch" permite deformar un eje (por ejemplo, la red para que coincida con los postes).
+// position.y es la altura de la superficie donde se apoya (0 = arena).
 struct SceneObject {
     std::string name;
     std::string path;
     glm::vec3 position;
     float rotationY;   // grados
-    float scale;
+    float height;      // metros
+    glm::vec3 stretch = glm::vec3(1.0f);
     Model* model = nullptr;
     glm::vec3 boundsMin = glm::vec3(0.0f);
     glm::vec3 boundsMax = glm::vec3(0.0f);
 };
 
-// Escala temporal: los modelos no comparten unidades todavía (ver docs/modelos.md).
+#define CP(m) "assets/models/CarlosParra/" m "/" m ".obj"
+#define GY(m) "assets/models/GabrielYukioayax/" m "/" m ".obj"
+#define GYF(dir, file) "assets/models/GabrielYukioayax/" dir "/" file
+
+// Cancha: x en [-4.5, 4.5], z en [-9, 9], red en z = 0 con postes en x = ±5.07.
+// La mesa de jueces está en z = +12 (lado de la entrada) y el podio en z = -13.
+const float MESA_Y = 0.75f;   // altura de la cubierta de la mesa
 std::vector<SceneObject> sceneObjects = {
-    { "Palmera",            "assets/models/CarlosParra/Palmera/Palmera.obj",                       { -12.0f, 0.0f, -6.0f },   0.0f, 1.5f  },
-    { "PuestoHeladosBanca", "assets/models/CarlosParra/PuestoHeladosBanca/PuestoHeladosBanca.obj", {  -7.0f, 0.0f, -3.0f },  30.0f, 1.3f  },
-    { "MesaJugadores",      "assets/models/CarlosParra/MesaJugadores/MesaJugadores.obj",           {  -2.5f, 0.0f,  2.0f },   0.0f, 1.0f  },
-    { "Podio",              "assets/models/CarlosParra/Podio/Podio.obj",                           {   0.0f, 0.0f, -5.0f },   0.0f, 0.5f  },
-    { "Trofeo",             "assets/models/CarlosParra/Trofeo/Trofeo.obj",                         {   2.5f, 0.0f,  2.0f },   0.0f, 0.25f },
-    { "Globo",              "assets/models/CarlosParra/Globo/Globo.obj",                           {   4.5f, 0.0f, -2.0f },   0.0f, 0.6f  },
-    { "Cubeta",             "assets/models/CarlosParra/Cubeta/Cubeta.obj",                         {   5.5f, 0.0f,  3.0f },   0.0f, 0.15f },
-    { "Camastro",           "assets/models/CarlosParra/Camastro/Camastro.obj",                     {   8.0f, 0.0f,  0.0f }, -20.0f, 1.0f  },
-    { "CosasDePlaya",       "assets/models/CarlosParra/CosasDePlaya/CosasDePlaya.obj",             {  14.0f, 0.0f, -6.0f },   0.0f, 1.0f  },
+    // --- Cancha y juego ---
+    { "Cancha",             CP("VolleyballCourt"),      {   0.0f, 0.0f,   0.0f },    0.0f,  2.5f  },
+    { "Red",                GY("RedVoley"),             {   0.0f, 0.0f,   0.0f },    0.0f,  2.43f, { 1.88f, 1.0f, 1.0f } },
+    { "SillaArbitro",       GY("SillaArbitro"),         {   6.4f, 0.0f,   0.0f },  -90.0f,  2.2f  },
+    { "Arbitro",            GY("Arbitro"),              {   7.4f, 0.0f,   1.4f },  -90.0f,  1.75f },
+    { "JugadorMX",          GY("JugadorMX"),            {  -2.2f, 0.0f,   4.5f },  180.0f,  1.85f },
+    { "JugadorPR",          GY("JugadorPR"),            {   2.2f, 0.0f,   6.0f },  180.0f,  1.83f },
+    { "JugadoraHA",         GY("JugadoraHA"),           {  -2.2f, 0.0f,  -5.0f },    0.0f,  1.75f },
+    { "JugadoraJA",         GY("JugadoraJA"),           {   2.2f, 0.0f,  -4.0f },    0.0f,  1.72f },
+    { "BalonVoley",         GY("BalonVoley"),           {  -1.0f, 0.0f,   3.4f },    0.0f,  0.21f },
+    { "Marcador",           GY("Marcador"),             {  -6.6f, 0.0f,  -1.5f },   90.0f,  1.8f  },
+    { "GradasIzq",          CP("Stands"),               { -10.8f, 0.0f,   0.0f },   90.0f,  3.0f  },
+    { "GradasDer",          CP("Stands"),               {  10.8f, 0.0f,   0.0f },  -90.0f,  3.0f  },
+    { "Espectador",         GY("Espectador"),           {  -7.8f, 0.0f,   4.0f },   90.0f,  1.78f },
+    { "Espectadora",        GY("Espectadora"),          {  -7.8f, 0.0f,   5.6f },   90.0f,  1.65f },
+    { "Nina",               GY("Nina"),                 {   7.8f, 0.0f,  -4.0f },  -90.0f,  1.15f },
+    { "Nino",               GY("Nino"),                 {   7.8f, 0.0f,  -5.4f },  -90.0f,  1.2f  },
+
+    // --- Mesa de jueces y bancas (entrada) ---
+    { "BancaLocal",         CP("MesaJugadores"),        {  -4.0f, 0.0f,  10.8f },    0.0f,  0.45f },
+    { "BancaVisita",        CP("MesaJugadores"),        {   4.0f, 0.0f,  10.8f },    0.0f,  0.45f },
+    { "Entrenador",         GY("Entrenador"),           {  -6.0f, 0.0f,  11.0f },  180.0f,  1.8f  },
+    { "Mesa",               GY("Mesa"),                 {   0.0f, 0.0f,  12.4f },   90.0f,  MESA_Y },
+    { "Botiquin",           CP("Medkit"),               {  -1.5f, MESA_Y, 12.4f },   0.0f,  0.12f },
+    { "Termo",              GY("Termo"),                {  -0.6f, MESA_Y, 12.4f },   0.0f,  0.28f },
+    { "Garrafon",           GY("Garrafon"),             {   0.2f, MESA_Y, 12.4f },   0.0f,  0.45f },
+    { "Refresco",           GY("Refresco"),             {   0.9f, MESA_Y, 12.3f },   0.0f,  0.12f },
+    { "BotellaAgua",        GY("BotellaAgua"),          {   1.3f, MESA_Y, 12.5f },   0.0f,  0.22f },
+    { "BloqueadorSolar",    GY("BloqueadorSolar"),      {   1.7f, MESA_Y, 12.3f },   0.0f,  0.16f },
+    { "Hielera",            GY("Hielera"),              {   2.9f, 0.0f,  12.6f },    0.0f,  0.45f },
+    { "BalonTeoria",        CP("VolleyballBall"),       {  -2.8f, 0.0f,  12.8f },    0.0f,  0.21f },
+    { "Bienvenida",         GY("Bienvenida"),           {  -6.0f, 0.0f,  17.0f },    0.0f,  4.0f  },
+    { "BoteBasura",         GY("BoteBasura"),           {   3.5f, 0.0f,  15.5f },    0.0f,  0.9f  },
+    { "BotellaPlastico",    CP("BotellaPlastico"),      {   4.4f, 0.0f,  15.8f },    0.0f,  0.25f },
+    { "Gato",               GY("Gato"),                 {  -4.5f, 0.0f,  14.0f },   30.0f,  0.3f  },
+
+    // --- Premiación ---
+    { "Podio",              CP("Podio"),                {   0.0f, 0.0f, -13.0f },    0.0f,  1.2f  },
+    { "Trofeo",             CP("Trofeo"),               {   0.0f, 1.2f, -13.0f },    0.0f,  0.55f },
+
+    // --- Zona de descanso (este) ---
+    { "Sombrilla",          CP("Sombrilla"),            {  16.0f, 0.0f,   6.0f },    0.0f,  2.4f  },
+    { "Camastro",           CP("Camastro"),             {  16.5f, 0.0f,   7.5f },  -20.0f,  0.9f  },
+    { "Gorra",              CP("Gorra"),                {  14.8f, 0.0f,   8.0f },   20.0f,  0.12f },
+    { "LentesSol",          CP("LentesSol"),            {  15.2f, 0.0f,   8.6f },    0.0f,  0.05f },
+    { "Cubeta",             CP("Cubeta"),               {  14.0f, 0.0f,  10.0f },    0.0f,  0.25f },
+    { "CosasDePlaya",       CP("CosasDePlaya"),         {  17.0f, 0.0f,  12.0f },    0.0f,  0.74f },
+    { "AroSalvavidasNino",  GY("AroSalvavidasNino"),    {  13.0f, 0.0f,  11.5f },    0.0f,  0.08f },
+    { "BalonPlaya",         GY("BalonPlaya"),           {  13.5f, 0.0f,   4.0f },    0.0f,  0.4f  },
+    { "Frisbee",            GY("Frisbee"),              {  17.5f, 0.0f,   3.5f },    0.0f,  0.025f },
+    { "Palmera",            CP("Palmera"),              {  19.0f, 0.0f,  -1.0f },    0.0f,  4.6f  },
+
+    // --- Puesto de helados (oeste) ---
+    { "PuestoHeladosBanca", CP("PuestoHeladosBanca"),   { -16.0f, 0.0f,   8.0f },   90.0f,  2.6f  },
+    { "Globo",              CP("Globo"),                { -13.5f, 0.0f,  11.0f },    0.0f,  1.2f  },
+
+    // --- Fútbol playa y salvavidas ---
+    { "Porteria",           GY("Porteria"),             { -19.0f, 0.0f,  -6.0f },   90.0f,  2.2f  },
+    { "BalonFutbol",        GY("BalonFutbol"),          { -15.5f, 0.0f,  -6.0f },    0.0f,  0.22f },
+    { "Escalera",           GY("Escalera"),             { -14.0f, 0.0f, -15.0f },    0.0f,  3.0f  },
+    { "Salvavidas",         GY("Salvavidas"),           { -12.2f, 0.0f, -14.0f },    0.0f,  1.8f  },
+    { "AroSalvavidas",      GY("AroSalvavidas"),        { -11.0f, 0.0f, -15.2f },    0.0f,  0.12f },
+
+    // --- Orilla y fauna ---
+    { "Tortuga",            GYF("Tortuga", "turtle.obj"),            {   8.0f, 0.0f, -18.0f },  30.0f, 0.35f },
+    { "Cangrejo",           GYF("Cangrejo", "model.obj"),            {   5.0f, 0.0f, -20.0f },   0.0f, 0.1f  },
+    { "Langosta",           GYF("Langosta", "model.obj"),            {  -4.0f, 0.0f, -19.0f },   0.0f, 0.12f },
+    { "EstrellaMar",        GY("EstrellaMar"),                       {   2.0f, 0.0f, -21.0f },   0.0f, 0.02f },
+    { "Gaviota",            GYF("Gaviota", "Mesh_Seagull.obj"),      {  -3.0f, 5.0f, -16.0f },   0.0f, 0.5f  },
+    { "Puerto",             GY("Puerto"),                            {   0.0f, 0.0f, -36.0f },   0.0f, 2.5f  },
+    { "Bote",               GYF("Bote", "Boat Texture 1.obj"),       {   7.0f, 0.0f, -34.0f },  20.0f, 1.5f  },
+    { "Faro",               GYF("Faro", "Lighthouse singly.obj"),    { -40.0f, 0.0f, -45.0f },   0.0f, 20.0f },
 };
+
+#undef CP
+#undef GY
+#undef GYF
 
 // Modo de captura para pruebas automáticas
 std::string capturePath;
@@ -132,6 +212,13 @@ int main(int argc, char** argv)
         std::string arg = argv[i];
         if (arg == "--captura" && i + 1 < argc)
             capturePath = fs::absolute(argv[++i]).string();
+        else if (arg == "--camara" && i + 5 < argc) {
+            camera.Position = glm::vec3(std::stof(argv[i + 1]), std::stof(argv[i + 2]), std::stof(argv[i + 3]));
+            camera.Yaw   = std::stof(argv[i + 4]);
+            camera.Pitch = std::stof(argv[i + 5]);
+            camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
+            i += 5;
+        }
     }
 
     if (!findAssetsRoot()) {
@@ -264,13 +351,23 @@ bool Start()
 
     ground = createGround(60.0f, glm::vec4(0.86f, 0.76f, 0.57f, 1.0f));
 
+    // Un modelo usado varias veces (por ejemplo, las gradas) se carga una sola vez.
+    std::map<std::string, Model*> loaded;
+    double tTotal = glfwGetTime();
     for (SceneObject& obj : sceneObjects) {
-        double t0 = glfwGetTime();
-        obj.model = new Model(obj.path);
+        auto it = loaded.find(obj.path);
+        if (it != loaded.end()) {
+            obj.model = it->second;
+        } else {
+            double t0 = glfwGetTime();
+            obj.model = new Model(obj.path);
+            loaded[obj.path] = obj.model;
+            std::cout << "Modelo " << obj.name << ": " << obj.model->meshes.size() << " mallas, "
+                      << (glfwGetTime() - t0) << " s" << std::endl;
+        }
         computeBounds(obj);
-        std::cout << "Modelo " << obj.name << ": " << obj.model->meshes.size() << " mallas, "
-                  << (glfwGetTime() - t0) << " s" << std::endl;
     }
+    std::cout << loaded.size() << " modelos cargados en " << (glfwGetTime() - tTotal) << " s" << std::endl;
 
     return true;
 }
@@ -284,7 +381,9 @@ void drawObject(const SceneObject& obj)
     glm::mat4 model(1.0f);
     model = glm::translate(model, obj.position);
     model = glm::rotate(model, glm::radians(obj.rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(obj.scale));
+    float sizeY = obj.boundsMax.y - obj.boundsMin.y;
+    float scale = (sizeY > 0.0f) ? obj.height / sizeY : 1.0f;
+    model = glm::scale(model, scale * obj.stretch);
     model = glm::translate(model, -pivot);
 
     phongShader->setMat4("model", model);
@@ -343,8 +442,11 @@ bool Update()
 
 void Shutdown()
 {
+    std::set<Model*> unique;
     for (SceneObject& obj : sceneObjects)
-        delete obj.model;
+        unique.insert(obj.model);
+    for (Model* m : unique)
+        delete m;
     delete ground;
     delete skybox;
     delete phongShader;
