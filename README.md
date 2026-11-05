@@ -59,12 +59,32 @@ del ejecutable, así que funciona desde Visual Studio y con doble clic.
 
 ### Controles
 
+Hay dos cámaras; **V** cambia entre ellas.
+
+**Cámara libre**
+
 | Tecla | Acción |
 |---|---|
 | W A S D | Mover la cámara |
 | Espacio / C | Subir / bajar |
 | Shift | Moverse más rápido |
 | Mouse / rueda | Mirar alrededor / zoom |
+
+**Tercera persona** (sigue a un jugador)
+
+| Tecla | Acción |
+|---|---|
+| W A S D | Caminar con el jugador, relativo a la cámara |
+| Shift | Correr |
+| Mouse | Girar la cámara alrededor del jugador |
+| Rueda | Acercar / alejar |
+| 1 2 3 4 | Elegir jugador (MX, PR, HA, JA) |
+
+**Generales**
+
+| Tecla | Acción |
+|---|---|
+| V | Cambiar de cámara |
 | Tab | Mostrar u ocultar el cursor |
 | M / N | Malla de alambre / relleno |
 | F12 | Captura de pantalla en `docs/capturas/` |

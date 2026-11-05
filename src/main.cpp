@@ -7,11 +7,23 @@
 * iluminación de Phong con una luz direccional y carga de modelos OBJ con Assimp.
 *
 * Controles:
+*   V              cambiar de cámara: libre / tercera persona
+*
+*   Cámara libre:
 *   W A S D        mover la cámara
 *   Espacio / C    subir / bajar
 *   Shift          moverse más rápido
 *   Mouse          mirar alrededor
 *   Rueda          zoom
+*
+*   Tercera persona:
+*   W A S D        caminar con el jugador (relativo a la cámara)
+*   Shift          correr
+*   Mouse          girar la cámara alrededor del jugador
+*   Rueda          acercar / alejar
+*   1 2 3 4        elegir jugador (MX, PR, HA, JA)
+*
+*   Generales:
 *   Tab            mostrar / ocultar el cursor
 *   M / N          malla de alambre / relleno
 *   F12            captura de pantalla en docs/capturas/
@@ -20,6 +32,7 @@
 * Argumentos opcionales (para pruebas):
 *   --captura <archivo.bmp>   dibuja unos cuadros, guarda la imagen y termina
 *   --camara x y z yaw pitch  posición y orientación inicial de la cámara
+*   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
 */
 
 #include <iostream>
@@ -61,6 +74,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 bool findAssetsRoot();
+enum class CameraMode;
+void setCameraMode(CameraMode mode);
 bool saveScreenshot(const std::string& path);
 
 // ---------------------------------------------------------------------------
@@ -83,6 +98,26 @@ bool firstMouse = true;
 bool cursorCaptured = true;
 const float CAMERA_SPEED      = 5.0f;
 const float CAMERA_SPEED_FAST = 15.0f;
+
+// ---------------------------------------------------------------------------
+// Cámara en tercera persona: sigue a un jugador y orbita a su alrededor
+// ---------------------------------------------------------------------------
+enum class CameraMode { Free, ThirdPerson };
+CameraMode cameraMode = CameraMode::Free;
+
+const char* PLAYER_NAMES[] = { "JugadorMX", "JugadorPR", "JugadoraHA", "JugadoraJA" };
+const int   PLAYER_COUNT   = 4;
+int   followedPlayer = 0;        // índice en PLAYER_NAMES
+float orbitYaw       = -90.0f;   // grados, alrededor del jugador
+float orbitPitch     = 20.0f;    // grados, positivo = cámara por encima
+float orbitDistance  = 5.0f;     // metros
+const float ORBIT_MIN_DISTANCE = 2.0f;
+const float ORBIT_MAX_DISTANCE = 15.0f;
+const float PLAYER_SPEED       = 3.0f;   // m/s caminando
+const float PLAYER_SPEED_RUN   = 6.5f;   // m/s corriendo (Shift)
+const float PLAYER_TURN_SPEED  = 540.0f; // grados/s
+const float WORLD_LIMIT        = 55.0f;  // el piso mide 120 x 120 m
+glm::vec3 thirdPersonEye(0.0f);
 
 // ---------------------------------------------------------------------------
 // Iluminación (sol)
@@ -220,6 +255,11 @@ int main(int argc, char** argv)
             camera.Pitch = std::stof(argv[i + 5]);
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
+        }
+        else if (arg == "--tercera") {
+            cameraMode = CameraMode::ThirdPerson;
+            if (i + 1 < argc && argv[i + 1][0] >= '1' && argv[i + 1][0] <= '4')
+                followedPlayer = argv[++i][0] - '1';
         }
     }
 
@@ -371,6 +411,7 @@ bool Start()
     }
     std::cout << loaded.size() << " modelos cargados en " << (glfwGetTime() - tTotal) << " s" << std::endl;
 
+    setCameraMode(cameraMode);
     return true;
 }
 
@@ -392,6 +433,90 @@ void drawObject(const SceneObject& obj)
     obj.model->Draw(*phongShader);
 }
 
+// ---------------------------------------------------------------------------
+// Tercera persona
+// ---------------------------------------------------------------------------
+SceneObject* findObject(const std::string& name)
+{
+    for (SceneObject& obj : sceneObjects)
+        if (obj.name == name)
+            return &obj;
+    return nullptr;
+}
+
+SceneObject* followedObject()
+{
+    return findObject(PLAYER_NAMES[followedPlayer]);
+}
+
+// Coloca la cámara detrás del jugador, a la altura de los hombros, y apunta a él.
+glm::mat4 thirdPersonView(glm::vec3& eye)
+{
+    SceneObject* player = followedObject();
+    glm::vec3 base = player ? player->position : glm::vec3(0.0f);
+    float h = player ? player->height : 1.8f;
+    glm::vec3 target = base + glm::vec3(0.0f, 0.85f * h, 0.0f);
+
+    float yaw = glm::radians(orbitYaw), pitch = glm::radians(orbitPitch);
+    glm::vec3 dir(cos(pitch) * cos(yaw), sin(pitch), cos(pitch) * sin(yaw));
+    eye = target - dir * orbitDistance;
+    eye.y = std::max(eye.y, 0.3f);   // que no se meta bajo la arena
+    thirdPersonEye = eye;
+    return glm::lookAt(eye, target, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+// Al entrar a tercera persona la cámara queda detrás del jugador.
+void placeOrbitBehindPlayer()
+{
+    SceneObject* player = followedObject();
+    if (!player) return;
+    // El modelo mira hacia +Z cuando rotationY = 0
+    float facing = glm::radians(player->rotationY);
+    glm::vec3 forward(sin(facing), 0.0f, cos(facing));
+    orbitYaw = glm::degrees(atan2(forward.z, forward.x));
+}
+
+void movePlayer(GLFWwindow* window)
+{
+    SceneObject* player = followedObject();
+    if (!player) return;
+
+    // Adelante = hacia donde mira la cámara, proyectado en el piso
+    float yaw = glm::radians(orbitYaw);
+    glm::vec3 forward(cos(yaw), 0.0f, sin(yaw));
+    glm::vec3 right(-forward.z, 0.0f, forward.x);
+
+    glm::vec3 move(0.0f);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) move += forward;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) move -= forward;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) move += right;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) move -= right;
+    if (glm::length(move) < 0.001f)
+        return;
+    move = glm::normalize(move);
+
+    bool run = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+    player->position += move * (run ? PLAYER_SPEED_RUN : PLAYER_SPEED) * deltaTime;
+    player->position.x = glm::clamp(player->position.x, -WORLD_LIMIT, WORLD_LIMIT);
+    player->position.z = glm::clamp(player->position.z, -WORLD_LIMIT, WORLD_LIMIT);
+
+    // Girar al jugador poco a poco hacia donde camina
+    float target = glm::degrees(atan2(move.x, move.z));
+    float diff = fmod(target - player->rotationY + 540.0f, 360.0f) - 180.0f;
+    float step = PLAYER_TURN_SPEED * deltaTime;
+    player->rotationY += glm::clamp(diff, -step, step);
+}
+
+void setCameraMode(CameraMode mode)
+{
+    cameraMode = mode;
+    if (mode == CameraMode::ThirdPerson)
+        placeOrbitBehindPlayer();
+    std::string title = std::string("Arena Limpia - ") +
+        (mode == CameraMode::Free ? "camara libre" : std::string("tercera persona: ") + PLAYER_NAMES[followedPlayer]);
+    glfwSetWindowTitle(window, title.c_str());
+}
+
 bool Update()
 {
     float currentFrame = (float)glfwGetTime();
@@ -404,8 +529,18 @@ bool Update()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float aspect = (screenHeight > 0) ? (float)screenWidth / (float)screenHeight : 1.0f;
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspect, 0.1f, 1000.0f);
-    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 view;
+    glm::vec3 eye;
+    float fov;
+    if (cameraMode == CameraMode::ThirdPerson) {
+        view = thirdPersonView(eye);
+        fov = 50.0f;
+    } else {
+        view = camera.GetViewMatrix();
+        eye = camera.Position;
+        fov = camera.Zoom;
+    }
+    glm::mat4 projection = glm::perspective(glm::radians(fov), aspect, 0.1f, 1000.0f);
 
     // Skybox: sin la traslación de la cámara para que siempre quede "al infinito"
     glm::mat4 skyView = glm::mat4(glm::mat3(view));
@@ -414,7 +549,7 @@ bool Update()
     phongShader->use();
     phongShader->setMat4("projection", projection);
     phongShader->setMat4("view", view);
-    phongShader->setVec3("viewPos", camera.Position);
+    phongShader->setVec3("viewPos", eye);
     phongShader->setVec3("sunDirection", sunDirection);
     phongShader->setVec3("sunColor", sunColor);
     phongShader->setFloat("ambientStrength", 0.35f);
@@ -460,6 +595,14 @@ void Shutdown()
 // ---------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
+    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if (cameraMode == CameraMode::ThirdPerson) {
+        movePlayer(window);
+        return;
+    }
+
     camera.MovementSpeed = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         ? CAMERA_SPEED_FAST : CAMERA_SPEED;
 
@@ -471,9 +614,6 @@ void processInput(GLFWwindow* window)
         camera.Position.y += camera.MovementSpeed * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
         camera.Position.y -= camera.MovementSpeed * deltaTime;
-
-    if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -488,6 +628,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         cursorCaptured = !cursorCaptured;
         glfwSetInputMode(window, GLFW_CURSOR, cursorCaptured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
         firstMouse = true;
+    }
+
+    if (key == GLFW_KEY_V)
+        setCameraMode(cameraMode == CameraMode::Free ? CameraMode::ThirdPerson : CameraMode::Free);
+
+    if (cameraMode == CameraMode::ThirdPerson && key >= GLFW_KEY_1 && key < GLFW_KEY_1 + PLAYER_COUNT) {
+        followedPlayer = key - GLFW_KEY_1;
+        setCameraMode(CameraMode::ThirdPerson);
     }
 
     if (key == GLFW_KEY_F12) {
@@ -525,11 +673,22 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = (float)xpos;
     lastY = (float)ypos;
 
+    if (cameraMode == CameraMode::ThirdPerson) {
+        const float sensitivity = 0.15f;
+        orbitYaw   += xoffset * sensitivity;
+        orbitPitch  = glm::clamp(orbitPitch - yoffset * sensitivity, -10.0f, 75.0f);
+        return;
+    }
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    if (cameraMode == CameraMode::ThirdPerson) {
+        orbitDistance = glm::clamp(orbitDistance - (float)yoffset * 0.5f,
+                                   ORBIT_MIN_DISTANCE, ORBIT_MAX_DISTANCE);
+        return;
+    }
     camera.ProcessMouseScroll((float)yoffset);
 }
 

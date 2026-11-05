@@ -3,7 +3,7 @@
 ## Escena y modelos
 
 - [ ] 80 modelos (≥64 originales)
-- [ ] 2 modos de cámara
+- [x] 2 modos de cámara: libre y tercera persona siguiendo a un jugador (tecla V)
 - [ ] 15 objetos interactivos
 
 ## Materiales, iluminación y texturas
