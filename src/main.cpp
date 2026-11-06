@@ -538,7 +538,7 @@ bool Start()
     skybox->loadCubemap(faces);
 
     ground = createGround(60.0f, glm::vec2(9.0f, 6.0f),
-                          "assets/textures", "arena_repetible.jpg");
+        "assets/textures", "arena_repetible.jpg");
 
     // Un modelo usado varias veces (por ejemplo, las gradas) se carga una sola vez.
     std::map<std::string, Model*> loaded;
@@ -1089,14 +1089,14 @@ const Wave SEA_WAVES[4] = {
     { {  0.8f, 0.6f },  3.2f, 0.03f,  2.1f },
     { { -0.7f, 0.7f },  1.4f, 0.012f, 0.4f },
 };
-const float SEA_GRAVITY    = 9.8f;
-const float SEA_SHORE_Z    = -26.0f;   // orilla: el mar está en z < -26
-const float SEA_FAR_Z      = -420.0f;
-const float SEA_HALF_X     = 220.0f;
+const float SEA_GRAVITY = 9.8f;
+const float SEA_SHORE_Z = -26.0f;   // orilla: el mar está en z < -26
+const float SEA_FAR_Z = -420.0f;
+const float SEA_HALF_X = 220.0f;
 const float SEA_SHORE_RAMP = 8.0f;     // metros en los que crecen las olas desde la orilla
-const float SEA_LEVEL      = 0.06f;    // altura del agua en la orilla (arriba de la arena)
-const float SEA_RISE       = 0.24f;    // el nivel sube esto mar adentro
-const float BOAT_DRAFT     = 0.35f;    // qué tanto se hunde el casco
+const float SEA_LEVEL = 0.06f;    // altura del agua en la orilla (arriba de la arena)
+const float SEA_RISE = 0.24f;    // el nivel sube esto mar adentro
+const float BOAT_DRAFT = 0.35f;    // qué tanto se hunde el casco
 
 GLuint seaVAO = 0, seaVBO = 0, seaEBO = 0;
 GLsizei seaIndexCount = 0;
@@ -1184,7 +1184,7 @@ void drawSea(const glm::mat4& projection, const glm::mat4& view, const glm::vec3
     waterShader->setMat4("view", view);
     waterShader->setVec3("viewPos", eye);
     waterShader->setVec3("sunDirection", sunDirection);
-    waterShader->setVec3("sunColor", sunColor);
+    waterShader->setVec3("sunColor", nightMode ? sunColor * 0.12f : sunColor);   // de noche el mar también se oscurece
     waterShader->setFloat("waveTime", simTime);
     waterShader->setFloat("gravity", SEA_GRAVITY);
     waterShader->setFloat("shoreZ", SEA_SHORE_Z);
@@ -1607,7 +1607,8 @@ void runSimulationTest()
     const float dt = 1.0f / 120.0f;
     if (simulateAction == "Partido") {
         toggleAutoMatch();
-    } else {
+    }
+    else {
         SceneObject* player = findObject(PLAYER_NAMES[followedPlayer]);
         if (!player) return;
         const ShotDef& shot = (simulateAction == "Remate") ? SHOT_REMATE : SHOT_SAQUE;
