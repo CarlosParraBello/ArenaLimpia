@@ -29,6 +29,7 @@
 *   M / N          malla de alambre / relleno
 *   F12            captura de pantalla en docs/capturas/
 *   P              partido automático 2 contra 2 (MX y PR contra HA y JA)
+*   L              día / noche (de noche se nota la luz de la fogata)
 *
 *   Interacción con 15 objetos (cámara libre o tercera persona):
 *   R              seleccionar el siguiente objeto (el seleccionado brilla)
@@ -146,6 +147,13 @@ glm::vec3 thirdPersonEye(0.0f);
 // ---------------------------------------------------------------------------
 glm::vec3 sunDirection = glm::normalize(glm::vec3(-0.4f, -1.0f, -0.3f));
 glm::vec3 sunColor(1.0f, 0.97f, 0.9f);
+
+// Segunda técnica de iluminación: luz puntual de la fogata con atenuación (práctica 8).
+// Con la tecla L se hace de noche (el sol baja mucho) para que se note la fogata.
+bool      nightMode = false;
+glm::vec3 fireLightPos(0.0f);
+glm::vec3 fireLightColor(0.0f);
+const glm::vec3 FIRE_COLOR(1.0f, 0.55f, 0.2f);
 
 // ---------------------------------------------------------------------------
 // Escena
@@ -813,6 +821,19 @@ void updatePalm(float t)
     }
 }
 
+// La luz de la fogata se coloca en la base de la primera llama y parpadea igual que el fuego
+void updateFireLight()
+{
+    if (!palm.obj || palm.flames.empty()) {
+        fireLightColor = glm::vec3(0.0f);
+        return;
+    }
+    const Flame& f = palm.flames[0];
+    fireLightPos = glm::vec3(objectMatrix(*palm.obj) * glm::vec4(f.base, 1.0f)) + glm::vec3(0.0f, 0.4f, 0.0f);
+    float intensity = palm.obj->partEmission[f.mesh] / 0.45f;   // ~1, sube y baja con el fuego
+    fireLightColor = FIRE_COLOR * (nightMode ? 6.0f : 2.0f) * intensity;
+}
+
 // ---------------------------------------------------------------------------
 // Balón: tiro parabólico (animación procedural)
 //
@@ -1408,6 +1429,7 @@ void stepSimulation(float dt)
 {
     simTime += dt;
     updatePalm(simTime);
+    updateFireLight();
     updateSimpleAnims(simTime);
     updateAutoMatch(dt);
     updateBall(dt);
@@ -1559,8 +1581,12 @@ bool Update()
     phongShader->setMat4("view", view);
     phongShader->setVec3("viewPos", eye);
     phongShader->setVec3("sunDirection", sunDirection);
-    phongShader->setVec3("sunColor", sunColor);
-    phongShader->setFloat("ambientStrength", 0.35f);
+    glm::vec3 sunNow = nightMode ? sunColor * 0.12f : sunColor;   // de noche casi no hay sol
+    float ambientNow = nightMode ? 0.12f : 0.35f;
+    phongShader->setVec3("sunColor", sunNow);
+    phongShader->setFloat("ambientStrength", ambientNow);
+    phongShader->setVec3("pointPosition", fireLightPos);
+    phongShader->setVec3("pointColor", fireLightColor);
     phongShader->setFloat("specularStrength", 0.25f);
     phongShader->setFloat("shininess", 32.0f);
     phongShader->setVec2("uvScale", glm::vec2(1.0f));
@@ -1571,8 +1597,10 @@ bool Update()
     skinShader->setMat4("view", view);
     skinShader->setVec3("viewPos", eye);
     skinShader->setVec3("sunDirection", sunDirection);
-    skinShader->setVec3("sunColor", sunColor);
-    skinShader->setFloat("ambientStrength", 0.35f);
+    skinShader->setVec3("sunColor", sunNow);
+    skinShader->setFloat("ambientStrength", ambientNow);
+    skinShader->setVec3("pointPosition", fireLightPos);
+    skinShader->setVec3("pointColor", fireLightColor);
     skinShader->setFloat("specularStrength", 0.25f);
     skinShader->setFloat("shininess", 32.0f);
     skinShader->setVec2("uvScale", glm::vec2(1.0f));
@@ -1676,6 +1704,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_P)
         toggleAutoMatch();
+
+    if (key == GLFW_KEY_L)
+        nightMode = !nightMode;   // día / noche (para ver la luz de la fogata)
 
     if (key == GLFW_KEY_V)
         setCameraMode(cameraMode == CameraMode::Free ? CameraMode::ThirdPerson : CameraMode::Free);
