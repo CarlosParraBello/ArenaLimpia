@@ -616,28 +616,43 @@ de la cancha para que no peleen en el \emph{depth buffer}.
 \pendiente{segunda técnica de iluminación.}
 
 \subsection{Modelos y estadísticas}
-La escena tiene 59 objetos colocados que usan 57 modelos distintos (las gradas y las bancas se
+La escena tiene 62 objetos colocados que usan 60 archivos de modelo distintos (las gradas y las bancas se
 reutilizan). El inventario completo, con autor, número de piezas, vértices, caras, texturas y
 origen de cada modelo, está en \texttt{docs/modelos.md}; la tabla~\ref{tab:modelos} lo resume.
 
 \begin{table}[H]
   \centering
-  \caption{Resumen de modelos registrados (al 5 de noviembre de 2026).}
+  \caption{Resumen de modelos registrados (al 6 de noviembre de 2026).}
   \label{tab:modelos}
   \begin{tabular}{l r r r}
     \toprule
     \textbf{Autor} & \textbf{Originales} & \textbf{Externos} & \textbf{Total} \\
     \midrule
-    Parra Bello Carlos Enrique     & 33 & 0 & 33 \\
+    Parra Bello Carlos Enrique     & 36 & 0 & 36 \\
     Hernández Yukioayax Gabriel    & 32 & 8 & 40 \\
     Proyecto de teoría (Uribe, Ayala) & 4 & 0 & 4 \\
     \midrule
-    \textbf{Total} & \textbf{69} & \textbf{8} & \textbf{77} \\
+    \textbf{Total} & \textbf{72} & \textbf{8} & \textbf{80} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\pendiente{actualizar al llegar a 80 modelos e incluir la tabla completa de estadísticas.}
+Los últimos tres modelos (bandera con asta, barril de madera y remo) están en un solo archivo,
+\texttt{MasElementos.blend}. Para poder colocarlos en lugares distintos, el script de exportación
+(\texttt{tools/exportar\_obj.py}) genera un OBJ por modelo con los objetos de Blender cuyo nombre
+empieza con ciertos prefijos (\texttt{Asta\_} y \texttt{Bandera}, \texttt{Barril},
+\texttt{Remo\_}). La bandera está junto a la cancha, el barril junto al carrito de helados y el
+remo en la arena cerca de la orilla (figura~\ref{fig:mas_elementos}). Sus texturas se redujeron a
+1024~px y se guardaron en JPG para que el archivo pese menos de 1~MB.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{mas_elementos}
+  \caption{Los modelos 78 a 80 en la escena: bandera con asta, barril de madera y remo.}
+  \label{fig:mas_elementos}
+\end{figure}
+
+\pendiente{incluir la tabla completa de estadísticas de los 80 modelos.}
 
 \subsection{Interacción}
 \label{sec:interaccion}
@@ -830,7 +845,7 @@ a los costados, y el muelle, el bote y el faro hacia el mar.
     \toprule
     \textbf{Requisito} & \textbf{Estado} \\
     \midrule
-    80 modelos (al menos 80\% originales) & 77 de 80 \\
+    80 modelos (al menos 80\% originales) & Cumplido \\
     2 modelos de cámara & Cumplido \\
     15 objetos interactivos & Cumplido \\
     Materiales opacos, plásticos, traslúcidos y metálicos & Cumplido \\

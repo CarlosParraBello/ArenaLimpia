@@ -12,17 +12,17 @@ Los modelos de otros autores o generados con IA deben indicar su fuente original
 - **Origen:** propio, mixto (con apoyo de IA; ver "Uso de IA") o externo con su fuente.
 - Las rutas son relativas a `assets/models/`.
 
-Actualizado el 2026-11-05.
+Actualizado el 2026-11-06.
 
 ## Resumen
 
 | | Originales | Externos | Total |
 |---|---|---|---|
-| Carlos Parra | 33 | 0 | 33 |
+| Carlos Parra | 36 | 0 | 36 |
 | Gabriel Yukio | 32 | 8 | 40 |
 | Proyecto de teoría (Rodrigo Uribe, Leonardo Ayala) | 4 | 0 | 4 |
-| **Total registrado** | **69 de 64** | **8 de 16** | **77 de 80** |
-| Faltan | 0 | — | 3 |
+| **Total registrado** | **72 de 64** | **8 de 16** | **80 de 80** |
+| Faltan | 0 | — | 0 |
 
 "Original de teoría": modelos originales hechos por Rodrigo Uribe y Leonardo Ayala para el
 proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de otra fuente.
@@ -108,9 +108,9 @@ proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de 
 | 75 | Fogata | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 15 | 214 | 254 | 2 |  | Propio |
 | 76 | Letrero de madera | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 2 | 16 | 12 | 1 |  | Propio |
 | 77 | Tronco para sentarse | Carlos Parra | `CarlosParra/Palmera/Palmera.blend` | 3 | 96 | 54 | 2 |  | Propio |
-| 78 |  |  |  |  |  |  |  |  |  |
-| 79 |  |  |  |  |  |  |  |  |  |
-| 80 |  |  |  |  |  |  |  |  |  |
+| 78 | Bandera con asta | Carlos Parra | `CarlosParra/MasElementos/MasElementos.blend` | 3 | 285 | 262 | 2 |  | Propio |
+| 79 | Barril de madera | Carlos Parra | `CarlosParra/MasElementos/MasElementos.blend` | 1 | 120 | 98 | 1 |  | Propio |
+| 80 | Remo | Carlos Parra | `CarlosParra/MasElementos/MasElementos.blend` | 3 | 40 | 26 | 1 |  | Propio |
 
 ## Fuentes de los modelos externos (APA)
 

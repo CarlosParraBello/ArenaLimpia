@@ -203,6 +203,7 @@ struct SceneObject {
 #define CP(m) "assets/models/CarlosParra/" m "/" m ".obj"
 #define GY(m) "assets/models/GabrielYukioayax/" m "/" m ".obj"
 #define GYF(dir, file) "assets/models/GabrielYukioayax/" dir "/" file
+#define CPF(dir, file) "assets/models/CarlosParra/" dir "/" file
 
 // Cancha: x en [-4.5, 4.5], z en [-9, 9], red en z = 0 con postes en x = ±5.07.
 // La mesa de jueces está en z = +12 (lado de la entrada) y el podio en z = -13.
@@ -249,6 +250,7 @@ std::vector<SceneObject> sceneObjects = {
     // --- Premiación ---
     { "Podio",              CP("Podio"),                {   0.0f, 0.0f, -13.0f },    0.0f,  1.2f  },
     { "Trofeo",             CP("Trofeo"),               {   0.0f, 1.2f, -13.0f },    0.0f,  0.55f },
+    { "Bandera",            CPF("MasElementos", "Bandera.obj"), { -6.0f, 0.0f, -11.0f },  0.0f,  3.09f },
 
     // --- Zona de descanso (este) ---
     { "Sombrilla",          CP("Sombrilla"),            {  16.0f, 0.0f,   6.0f },    0.0f,  2.4f  },
@@ -265,6 +267,7 @@ std::vector<SceneObject> sceneObjects = {
     // --- Puesto de helados (oeste) ---
     { "PuestoHeladosBanca", CP("PuestoHeladosBanca"),   { -16.0f, 0.0f,   8.0f },   90.0f,  2.6f  },
     { "Globo",              CP("Globo"),                { -13.5f, 0.0f,  11.0f },    0.0f,  1.2f  },
+    { "Barril",             CPF("MasElementos", "Barril.obj"),  { -14.0f, 0.0f,   5.5f },  0.0f,  0.9f  },
 
     // --- Fútbol playa y salvavidas ---
     { "Porteria",           GY("Porteria"),             { -19.0f, 0.0f,  -6.0f },   90.0f,  2.2f  },
@@ -278,6 +281,7 @@ std::vector<SceneObject> sceneObjects = {
     { "Cangrejo",           GYF("Cangrejo", "model.obj"),            {   5.0f, 0.0f, -20.0f },   0.0f, 0.1f  },
     { "Langosta",           GYF("Langosta", "model.obj"),            {  -4.0f, 0.0f, -19.0f },   0.0f, 0.12f },
     { "EstrellaMar",        GY("EstrellaMar"),                       {   2.0f, 0.0f, -21.0f },   0.0f, 0.02f },
+    { "Remo",               CPF("MasElementos", "Remo.obj"),         {   9.5f, 0.0f, -22.0f },  30.0f, 0.04f },
     { "Gaviota",            GYF("Gaviota", "Mesh_Seagull.obj"),      {  -3.0f, 5.0f, -16.0f },   0.0f, 0.5f  },
     { "Puerto",             GY("Puerto"),                            {   0.0f, 0.0f, -36.0f },   0.0f, 2.5f  },
     { "Bote",               GYF("Bote", "Boat Texture 1.obj"),       {   7.0f, 0.0f, -34.0f },  20.0f, 1.5f  },
@@ -287,6 +291,7 @@ std::vector<SceneObject> sceneObjects = {
 #undef CP
 #undef GY
 #undef GYF
+#undef CPF
 
 // ---------------------------------------------------------------------------
 // Materiales por objeto (práctica 7 y 8: propiedades materiales)
@@ -372,6 +377,8 @@ int main(int argc, char** argv)
         }
         else if (arg == "--seleccionar" && i + 1 < argc)
             selectArg = argv[++i];
+        else if (arg == "--noche")
+            nightMode = true;
         else if (arg == "--tiempo" && i + 1 < argc)
             simTime = std::stof(argv[++i]);
         else if (arg == "--simular" && i + 2 < argc) {

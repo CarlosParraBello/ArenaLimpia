@@ -2,7 +2,7 @@
 
 ## Escena y modelos
 
-- [ ] 80 modelos (≥64 originales)
+- [x] 80 modelos (72 originales y 8 externos, ver `docs/modelos.md`)
 - [x] 2 modos de cámara: libre y tercera persona siguiendo a un jugador (tecla V)
 - [x] 15 objetos interactivos (tecla R selecciona; G, flechas, RePág/AvPág, Z/X, +/-, Retroceso):
   frisbee, balón de playa, balón de fútbol, aro salvavidas, hielera, termo, garrafón, refresco,

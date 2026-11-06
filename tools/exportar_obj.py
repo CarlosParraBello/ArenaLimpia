@@ -17,6 +17,8 @@ Notas:
 - Los materiales procedurales no se pueden exportar a OBJ. Si un material no tiene imagen
   y existe assets/textures/imagenes_texturizados/<Material>_Bake.png, se usa esa imagen.
 - Se usa el exportador de OBJ, no FBX: el FBX de Blender 4.1+ llega a Assimp sin normales.
+- Si un .blend trae varios modelos (SPLIT), cada uno se exporta a su propio OBJ con los objetos
+  cuyo nombre empieza con alguno de sus prefijos; así se pueden poner en lugares distintos.
 """
 import bpy
 import glob
@@ -27,6 +29,15 @@ import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 BAKE_DIR = os.path.join(ROOT, "assets", "textures", "imagenes_texturizados")
+
+# Modelo (carpeta) -> {OBJ de salida: prefijos de los objetos de Blender que lleva}
+SPLIT = {
+    "MasElementos": {
+        "Bandera": ["Asta_", "Bandera"],
+        "Barril":  ["Barril"],
+        "Remo":    ["Remo_"],
+    },
+}
 
 
 def safe_name(name):
@@ -90,22 +101,26 @@ def export(blend):
     model = os.path.basename(folder)
     linked = link_bake_images()
     images = write_images(os.path.join(folder, "textures"))
-    obj_path = os.path.join(folder, model + ".obj")
-    bpy.ops.wm.obj_export(
-        filepath=obj_path,
-        export_selected_objects=False,
-        apply_modifiers=True,
-        export_uv=True,
-        export_normals=True,
-        export_materials=True,
-        export_triangulated_mesh=True,
-        path_mode="RELATIVE",
-        forward_axis="NEGATIVE_Z",
-        up_axis="Y",
-    )
-    print(f"OK {os.path.relpath(obj_path, ROOT)}  texturas={len(images)}"
-          + (f"  bake={','.join(linked)}" if linked else ""))
-
+    pieces = SPLIT.get(model, {model: None})
+    for name, prefixes in pieces.items():
+        if prefixes is not None:
+            for o in bpy.data.objects:
+                o.select_set(any(o.name.startswith(p) for p in prefixes))
+        obj_path = os.path.join(folder, name + ".obj")
+        bpy.ops.wm.obj_export(
+            filepath=obj_path,
+            export_selected_objects=prefixes is not None,
+            apply_modifiers=True,
+            export_uv=True,
+            export_normals=True,
+            export_materials=True,
+            export_triangulated_mesh=True,
+            path_mode="RELATIVE",
+            forward_axis="NEGATIVE_Z",
+            up_axis="Y",
+        )
+        print(f"OK {os.path.relpath(obj_path, ROOT)}  texturas={len(images)}"
+              + (f"  bake={','.join(linked)}" if linked else ""))
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []

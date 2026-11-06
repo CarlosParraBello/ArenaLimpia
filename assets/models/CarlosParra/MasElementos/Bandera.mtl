@@ -1,0 +1,22 @@
+# Blender 5.2.2 LTS MTL File: 'MasElementos.blend'
+# www.blender.org
+
+newmtl Asta_Metal
+Ns 422.499969
+Ka 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd textures/asta_metal.jpg
+
+newmtl Bandera_Rojo
+Ns 159.999985
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd -o 0.05 0.5 0.5 -s 0.9 0.9 0.9 textures/bandera_rojo.jpg
