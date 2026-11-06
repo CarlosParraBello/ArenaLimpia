@@ -1,0 +1,9 @@
+# Archivos generados al compilar (pdflatex manual.tex)
+*.aux
+*.log
+*.toc
+*.out
+*.lof
+*.lot
+*.synctex.gz
+manual.pdf

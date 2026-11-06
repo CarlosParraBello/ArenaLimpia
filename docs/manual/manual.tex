@@ -1,0 +1,393 @@
+% =============================================================================
+% Arena Limpia - Manual de instalación y uso (manual.pdf)
+% Laboratorio de Computación Gráfica e Interacción Humano-Computadora, FI UNAM, 2027-1
+%
+% Mismo formato que el reporte: fuente de 12 puntos e interlineado 1.5.
+% Compilar desde esta carpeta (dos veces, para el índice):
+%     pdflatex manual.tex && pdflatex manual.tex
+% =============================================================================
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing                         % interlineado 1.5
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figuras/}}
+
+% Tecla dibujada como recuadro: \tecla{W}
+\newcommand{\tecla}[1]{\fbox{\footnotesize\ttfamily\strut #1}}
+
+% Tablas de controles: tecla a la izquierda, acción a la derecha
+\newenvironment{controles}[1]
+  {\table[H]\centering\caption{#1}\renewcommand{\arraystretch}{1.25}%
+   \tabularx{\linewidth}{>{\raggedright\arraybackslash}p{4.2cm} X}\toprule
+   \textbf{Tecla} & \textbf{Acción} \\ \midrule}
+  {\bottomrule\endtabularx\endtable}
+
+\begin{document}
+
+% -----------------------------------------------------------------------------
+% Portada
+% -----------------------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  {\large Universidad Nacional Autónoma de México\par}
+  {\large Facultad de Ingeniería\par}
+  \vspace{0.4cm}
+  {Laboratorio de Computación Gráfica e Interacción Humano-Computadora\par}
+  {Semestre 2027-1\par}
+  \vspace{2cm}
+  {\Huge\bfseries Arena Limpia\par}
+  \vspace{0.3cm}
+  {\Large Torneo de Voleibol de Playa\par}
+  \vspace{1.2cm}
+  {\LARGE Manual de instalación y uso\par}
+  \vspace{1.5cm}
+  \includegraphics[width=0.75\linewidth]{inicio}
+  \vfill
+  \begin{tabular}{l}
+    Hernández Yukioayax Gabriel \\
+    Parra Bello Carlos Enrique
+  \end{tabular}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% -----------------------------------------------------------------------------
+\section{¿Qué es Arena Limpia?}
+% -----------------------------------------------------------------------------
+Arena Limpia es un entorno 3D interactivo de un torneo de voleibol de playa. La escena tiene
+una cancha con red, jugadores de cuatro países (México, Perú, Holanda y Japón), árbitro,
+gradas con espectadores, mesa de jueces, podio, una zona de descanso con palmera y fogata, un
+muelle, un faro y el mar con olas. El usuario puede recorrer la playa con una cámara libre,
+controlar a un jugador en tercera persona para sacar, rematar y festejar, ver un partido
+automático de dos contra dos, cambiar entre día y noche, y tomar y mover 15 objetos de la
+playa.
+
+% -----------------------------------------------------------------------------
+\section{Requisitos del equipo}
+% -----------------------------------------------------------------------------
+\begin{table}[H]
+  \centering
+  \caption{Requisitos mínimos para ejecutar Arena Limpia.}
+  \label{tab:requisitos}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Componente} & \textbf{Requisito} \\
+    \midrule
+    Sistema operativo & Windows 10 u 11 de 64 bits \\
+    Tarjeta de video  & Compatible con OpenGL 3.3 o superior (cualquier tarjeta
+                        integrada o dedicada de 2012 en adelante) con controladores
+                        actualizados \\
+    Memoria RAM       & 4 GB \\
+    Espacio en disco  & 300 MB libres \\
+    Entrada           & Teclado y mouse \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Instalación}
+% -----------------------------------------------------------------------------
+\begin{enumerate}[leftmargin=*]
+  \item Haga doble clic en \texttt{setup.exe}. Si Windows muestra el aviso
+        \emph{Windows protegió su PC}, elija \textbf{Más información} y luego
+        \textbf{Ejecutar de todas formas}; el instalador no está firmado digitalmente.
+  \item Presione \textbf{Siguiente} en la pantalla de bienvenida.
+  \item Elija la carpeta de instalación o deje la que se propone y presione
+        \textbf{Siguiente}.
+  \item Presione \textbf{Instalar} y espere a que se copien los archivos.
+  \item Presione \textbf{Finalizar}. Se crea un acceso directo llamado
+        \textbf{Arena Limpia} en el escritorio y en el menú Inicio.
+\end{enumerate}
+
+\subsection*{Desinstalación}
+Abra \textbf{Configuración $\rightarrow$ Aplicaciones}, busque \textbf{Arena Limpia} y elija
+\textbf{Desinstalar}.
+
+% -----------------------------------------------------------------------------
+\section{Inicio del programa}
+% -----------------------------------------------------------------------------
+Abra el acceso directo \textbf{Arena Limpia}. Se abren dos ventanas:
+\begin{itemize}
+  \item Una \textbf{consola} negra donde el programa escribe lo que va cargando. No la cierre:
+        al cerrarla se cierra también el programa.
+  \item La \textbf{ventana de la escena} (1280 $\times$ 720), que aparece después de unos
+        segundos, cuando terminan de cargar los modelos.
+\end{itemize}
+
+El programa empieza de día, con la \textbf{cámara libre} colocada detrás de la mesa de jueces
+y mirando hacia la cancha (figura~\ref{fig:inicio}). El cursor del mouse queda capturado por
+la ventana para poder mirar alrededor; presione \tecla{Tab} para liberarlo y volver a
+capturarlo. El título de la ventana indica siempre la cámara activa y el objeto seleccionado.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{inicio}
+  \caption{Vista inicial: la cancha con los jugadores, las gradas, la mesa de jueces y, al
+    fondo, el podio, el muelle y el faro.}
+  \label{fig:inicio}
+\end{figure}
+
+\subsection{Mapa de la escena}
+Con la vista inicial como referencia (mirando hacia el mar):
+\begin{itemize}
+  \item \textbf{Al centro:} la cancha, con la red, el marcador y el árbitro en su silla. Los
+        jugadores de México y Perú están del lado cercano; los de Holanda y Japón, del lado
+        lejano.
+  \item \textbf{A los lados de la cancha:} las gradas con espectadores.
+  \item \textbf{Cerca de la cámara:} la mesa de jueces con la hielera, el bote de basura y
+        otros objetos.
+  \item \textbf{Al fondo, hacia el mar:} el podio con el trofeo, el muelle, el bote, el faro
+        y el salvavidas en su torre.
+  \item \textbf{A la derecha (este):} la zona de descanso, con la sombrilla, la palmera y
+        la fogata.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Cámaras}
+% -----------------------------------------------------------------------------
+Hay dos cámaras. La tecla \tecla{V} cambia de una a otra en cualquier momento.
+
+\subsection{Cámara libre}
+Permite volar por toda la escena.
+
+\begin{controles}{Controles de la cámara libre.}
+  \tecla{W} \tecla{A} \tecla{S} \tecla{D} & Avanzar, ir a la izquierda, retroceder, ir a la
+                                            derecha \\
+  \tecla{Espacio} / \tecla{C}             & Subir / bajar \\
+  \tecla{Shift} (mantener)                & Moverse más rápido \\
+  Mouse                                   & Mirar alrededor \\
+  Rueda del mouse                         & Acercar o alejar el zoom \\
+\end{controles}
+
+\subsection{Tercera persona}
+La cámara sigue por detrás a uno de los cuatro jugadores, que se controla con el teclado
+(figura~\ref{fig:tercera}). El jugador camina con su animación y gira poco a poco hacia
+donde se mueve.
+
+\begin{controles}{Controles en tercera persona.}
+  \tecla{W} \tecla{A} \tecla{S} \tecla{D} & Caminar con el jugador; la dirección es relativa
+                                            a la cámara \\
+  \tecla{Shift} (mantener)                & Correr \\
+  Mouse                                   & Girar la cámara alrededor del jugador \\
+  Rueda del mouse                         & Acercar o alejar la cámara \\
+  \tecla{1} \tecla{2} \tecla{3} \tecla{4} & Elegir el jugador: 1 México, 2 Perú, 3 Holanda,
+                                            4 Japón \\
+  \tecla{Q}                               & Saque: lanza el balón hacia arriba y lo golpea
+                                            hacia el otro lado de la red \\
+  \tecla{E}                               & Remate: salta y golpea el balón con fuerza \\
+  \tecla{F}                               & Festejo \\
+\end{controles}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{tercera}
+  \end{minipage}\hfill
+  \begin{minipage}{0.49\linewidth}
+    \includegraphics[width=\linewidth]{remate}
+  \end{minipage}
+  \caption{Tercera persona siguiendo al jugador de México (izquierda) y el mismo jugador
+    rematando con la tecla E (derecha).}
+  \label{fig:tercera}
+\end{figure}
+
+Después de un saque o un remate el balón sigue la física: vuela en parábola, rebota en la
+arena, puede chocar con la red y rueda hasta detenerse. No importa dónde haya quedado: en el
+saque el balón aparece en la mano del jugador, y en el remate llega como pase de un compañero
+desde la izquierda. Los saques y remates siempre van hacia el frente del jugador, así que
+conviene girarlo hacia la red antes de golpear.
+
+% -----------------------------------------------------------------------------
+\section{Funciones generales}
+% -----------------------------------------------------------------------------
+Estas teclas funcionan con cualquiera de las dos cámaras.
+
+\begin{controles}{Controles generales.}
+  \tecla{V}   & Cambiar entre cámara libre y tercera persona \\
+  \tecla{P}   & Iniciar o detener el partido automático de dos contra dos \\
+  \tecla{L}   & Cambiar entre día y noche \\
+  \tecla{Tab} & Liberar o capturar el cursor del mouse \\
+  \tecla{M} / \tecla{N} & Ver la escena en malla de alambre / volver al modo normal \\
+  \tecla{F12} & Guardar una captura de pantalla en la carpeta
+                \texttt{docs\textbackslash capturas} del programa \\
+  \tecla{Esc} & Salir del programa \\
+\end{controles}
+
+\subsection{Partido automático}
+Con \tecla{P} los cuatro jugadores juegan solos: México y Perú contra Holanda y Japón
+(figura~\ref{fig:partido}). México saca; en cada jugada, del equipo que recibe corre hacia el
+balón el jugador más cercano y lo remata de regreso, mientras su compañero vuelve a su lugar.
+El partido sigue hasta que se presiona \tecla{P} otra vez. Se puede ver con la cámara libre o
+siguiendo a un jugador en tercera persona.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{partido}
+  \caption{Partido automático de dos contra dos (tecla P).}
+  \label{fig:partido}
+\end{figure}
+
+\subsection{Día y noche}
+Con \tecla{L} la escena pasa a la noche: el sol y el mar se oscurecen y la fogata ilumina la
+arena, las piedras y el tronco a su alrededor con una luz que parpadea junto con el fuego
+(figura~\ref{fig:noche}). Para verla, vaya con la cámara libre a la zona de descanso, a la
+derecha de la cancha, junto a la palmera.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{noche}
+  \caption{La fogata de noche (tecla L).}
+  \label{fig:noche}
+\end{figure}
+
+% -----------------------------------------------------------------------------
+\section{Objetos interactivos}
+% -----------------------------------------------------------------------------
+Hay 15 objetos que se pueden seleccionar, mover, rotar y escalar:
+
+\begin{center}
+\begin{tabular}{lll}
+  1. Frisbee            & 6. Termo              & 11. Bote de basura \\
+  2. Balón de playa     & 7. Garrafón           & 12. Cubeta \\
+  3. Balón de fútbol    & 8. Refresco           & 13. Gorra \\
+  4. Aro salvavidas     & 9. Botella de agua    & 14. Lentes de sol \\
+  5. Hielera            & 10. Bloqueador solar  & 15. Sombrilla \\
+\end{tabular}
+\end{center}
+
+Cada vez que se presiona \tecla{R} se selecciona el siguiente objeto, en el orden de la lista.
+El objeto seleccionado brilla y su nombre aparece en el título de la ventana
+(figura~\ref{fig:seleccion}). Después del último objeto, \tecla{R} deja de seleccionar
+objetos.
+
+\begin{controles}{Controles de los objetos interactivos.}
+  \tecla{R}                       & Seleccionar el siguiente objeto \\
+  \tecla{G}                       & Tomar o soltar el objeto (solo en cámara libre). El
+                                    objeto tomado flota frente a la cámara y la sigue; al
+                                    soltarlo cae a la arena \\
+  Flechas                         & Mover el objeto sobre la arena \\
+  \tecla{RePág} / \tecla{AvPág}   & Subir / bajar el objeto \\
+  \tecla{Z} / \tecla{X}           & Rotar el objeto a la izquierda / derecha \\
+  \tecla{+} / \tecla{-}           & Agrandar / achicar el objeto (también las del teclado
+                                    numérico) \\
+  \tecla{Retroceso}               & Regresar el objeto a su posición, rotación y tamaño
+                                    originales \\
+\end{controles}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{seleccion}
+  \caption{El balón de playa seleccionado con la tecla R: el objeto seleccionado se ve más
+    brillante.}
+  \label{fig:seleccion}
+\end{figure}
+
+\textbf{Ejemplo:} para llevar la hielera a otro lugar, presione \tecla{R} cinco veces hasta
+que el título diga \emph{Hielera}, presione \tecla{G} para tomarla, muévase con la cámara
+libre hasta el lugar deseado y presione \tecla{G} de nuevo para soltarla.
+
+% -----------------------------------------------------------------------------
+\section{Animaciones que se pueden observar}
+% -----------------------------------------------------------------------------
+Además de lo que controla el usuario, la escena tiene animaciones que ocurren solas:
+
+\begin{itemize}
+  \item \textbf{Personajes:} los jugadores tienen una animación de reposo y caminan al moverse; el árbitro
+        hace la señal de punto cada 8 segundos.
+  \item \textbf{Naturaleza:} la palmera se mece con el viento, el fuego de la fogata
+        parpadea, las olas del mar se mueven y el bote flota sobre ellas, y una gaviota vuela
+        en círculos sobre la playa.
+  \item \textbf{Objetos y animales:} giran el frisbee, la estrella de mar, el aro salvavidas y
+        el globo; van y vienen el balón de playa, el bote, el cangrejo, la langosta y la
+        tortuga; el gato voltea de un lado a otro.
+\end{itemize}
+
+% -----------------------------------------------------------------------------
+\section{Solución de problemas}
+% -----------------------------------------------------------------------------
+\begin{table}[H]
+  \centering
+  \caption{Problemas comunes y su solución.}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{5cm} X}
+    \toprule
+    \textbf{Problema} & \textbf{Solución} \\
+    \midrule
+    La ventana no se abre o se cierra de inmediato &
+      La tarjeta de video no tiene OpenGL 3.3 o sus controladores están desactualizados.
+      Actualice los controladores desde la página del fabricante (Intel, NVIDIA o AMD). \\
+    Falta un archivo \texttt{.dll} al abrir el programa &
+      Instale el paquete \emph{Microsoft Visual C++ Redistributable} (x64) más reciente
+      desde la página de Microsoft. \\
+    La escena tarda en aparecer &
+      Es normal: se cargan más de 80 modelos con sus texturas. La consola muestra el
+      avance. \\
+    El mouse no mueve la cámara &
+      El cursor está liberado; presione \tecla{Tab} o haga clic en la ventana. \\
+    No puedo mover al jugador ni sacar &
+      Esas teclas solo funcionan en tercera persona; presione \tecla{V}. \\
+    \tecla{G} no toma el objeto &
+      Primero seleccione un objeto con \tecla{R}, y use la cámara libre. \\
+    Un objeto quedó perdido o muy grande &
+      Selecciónelo con \tecla{R} y presione \tecla{Retroceso}. \\
+    La escena se ve como líneas &
+      Está activa la malla de alambre; presione \tecla{N}. \\
+    No veo la luz de la fogata &
+      Presione \tecla{L} para hacer de noche y acérquese a la palmera, a la derecha de la
+      cancha. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% -----------------------------------------------------------------------------
+\section{Resumen de controles}
+% -----------------------------------------------------------------------------
+\begin{table}[H]
+  \centering
+  \caption{Todas las teclas del programa.}
+  \small
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{4.2cm} X l}
+    \toprule
+    \textbf{Tecla} & \textbf{Acción} & \textbf{Cámara} \\
+    \midrule
+    \tecla{V}                               & Cambiar de cámara              & Ambas \\
+    \tecla{W} \tecla{A} \tecla{S} \tecla{D} & Mover la cámara / al jugador   & Ambas \\
+    \tecla{Shift}                           & Más rápido / correr            & Ambas \\
+    \tecla{Espacio} / \tecla{C}             & Subir / bajar                  & Libre \\
+    Mouse, rueda                            & Mirar, zoom                    & Ambas \\
+    \tecla{1}--\tecla{4}                    & Elegir jugador                 & Tercera \\
+    \tecla{Q} / \tecla{E} / \tecla{F}       & Saque / remate / festejo       & Tercera \\
+    \tecla{P}                               & Partido automático             & Ambas \\
+    \tecla{L}                               & Día / noche                    & Ambas \\
+    \tecla{R}                               & Seleccionar objeto             & Ambas \\
+    \tecla{G}                               & Tomar / soltar objeto          & Libre \\
+    Flechas, \tecla{RePág} / \tecla{AvPág}  & Mover objeto                   & Ambas \\
+    \tecla{Z} / \tecla{X}                   & Rotar objeto                   & Ambas \\
+    \tecla{+} / \tecla{-}                   & Escalar objeto                 & Ambas \\
+    \tecla{Retroceso}                       & Restaurar objeto               & Ambas \\
+    \tecla{M} / \tecla{N}                   & Alambre / relleno              & Ambas \\
+    \tecla{Tab}                             & Liberar / capturar cursor      & Ambas \\
+    \tecla{F12}                             & Captura de pantalla            & Ambas \\
+    \tecla{Esc}                             & Salir                          & Ambas \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\end{document}
