@@ -203,6 +203,7 @@ simulación (balón, personajes y árbitro) y dibuja la escena (figura~\ref{fig:
     \texttt{include/model.h}, \texttt{mesh.h} & Carga y dibujo de modelos OBJ (base del curso) \\
     \texttt{shaders/phong.vs}, \texttt{phong.fs} & Iluminación de Phong con el sol \\
     \texttt{shaders/phong\_skinning.vs} & Deformación de la malla con los huesos \\
+    \texttt{shaders/water.vs}, \texttt{water.fs} & Olas del mar (altura, normal y color del agua) \\
     \texttt{tools/animar\_personajes.py} & Creación y exportación de las animaciones en Blender \\
     \texttt{tools/exportar\_obj.py} & Exportación de modelos de Blender a OBJ \\
     \bottomrule
@@ -419,7 +420,131 @@ y que parpadea con el mismo ruido que la altura de la llama.
   \label{fig:fuego}
 \end{figure}
 
-\pendiente{documentar las otras dos animaciones procedurales.}
+\subsubsection{Gaviota volando en círculo}
+\label{sec:gaviota}
+La gaviota se mueve como la luna de la práctica de animación: su posición se calcula en cada
+cuadro con un radio, una velocidad angular y el tiempo, alrededor de su posición original
+$\mathbf{c}$:
+\begin{equation}
+  \mathbf{p}(t) = \mathbf{c} + \bigl(r\cos\omega t,\; 0.5\sin 2\omega t,\; r\sin\omega t\bigr),
+  \qquad r = 4~\text{m},\quad \omega = \frac{2\pi}{6~\text{s}},
+\end{equation}
+de modo que da una vuelta cada seis segundos y sube y baja medio metro dos veces por vuelta.
+Para que mire hacia donde vuela, su rotación en $y$ sigue la dirección de la tangente al
+círculo, $\psi(t) = \operatorname{atan2}(-\sin\omega t, \cos\omega t)$
+(figura~\ref{fig:gaviota}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{gaviota_vuelo}
+  \caption{La gaviota en cuatro instantes de su vuelo en círculo sobre la orilla.}
+  \label{fig:gaviota}
+\end{figure}
+
+\subsubsection{Olas del mar}
+\label{sec:olas}
+El mar es una cuadrícula de $221 \times 161$ vértices que empieza en la orilla ($z = -26$~m) y
+llega hasta el horizonte ($z = -420$~m); las filas están más juntas cerca de la orilla, donde
+se ven de cerca. En cada cuadro el \emph{vertex shader} (\texttt{shaders/water.vs}) calcula la
+altura de cada vértice con una suma de cuatro senos que viajan hacia la playa:
+\begin{equation}
+  h(\mathbf{p}, t) = \sum_{i=1}^{4} A_i \sin\!\left(k_i\, \mathbf{d}_i\cdot\mathbf{p}
+    - \omega_i t + \varphi_i\right),
+  \qquad k_i = \frac{2\pi}{\lambda_i},\quad \omega_i = \sqrt{g\, k_i},
+\end{equation}
+donde $\mathbf{p} = (x, z)$, $\mathbf{d}_i$ es la dirección de la ola y $\omega_i$ sale de la
+relación de dispersión del agua profunda, así que las olas largas avanzan más rápido que las
+cortas, como en el mar real. Las ondas usadas tienen largos de 14, 7.5, 3.2 y 1.4~m y
+amplitudes de 12, 7, 3 y 1.2~cm. Para que las olas no choquen de golpe con la arena, la altura
+se multiplica por un factor $s = \operatorname{smoothstep}(0, 8, z_{\text{orilla}} - z)$ que vale
+cero en la orilla y uno a ocho metros mar adentro.
+
+La normal no se toma de la cuadrícula sino que se calcula en cada fragmento con la derivada
+exacta de la suma,
+\begin{equation}
+  \nabla h = \sum_{i} A_i k_i \cos\!\left(k_i\, \mathbf{d}_i\cdot\mathbf{p} - \omega_i t
+    + \varphi_i\right) \mathbf{d}_i,
+  \qquad \mathbf{n} = \operatorname{normalize}\!\left(-\tfrac{\partial h}{\partial x},\, 1,\,
+    -\tfrac{\partial h}{\partial z}\right),
+\end{equation}
+de modo que los reflejos del sol se ven detallados aunque los vértices estén separados. El
+color pasa de turquesa en la orilla a azul profundo mar adentro, refleja más el cielo en los
+ángulos rasantes (aproximación de Fresnel, $(1 - \mathbf{n}\cdot\mathbf{v})^4$), se vuelve
+transparente en los primeros dos metros para que se vea la arena y tiene una franja de espuma
+que avanza y regresa (figuras~\ref{fig:olas} y~\ref{fig:orilla}).
+
+La misma función se evalúa en el CPU para el bote: en cada cuadro su altura es la del agua en su
+posición menos lo que se hunde el casco (35~cm), y se inclina para que su eje vertical coincida
+con la normal de la ola (figura~\ref{fig:bote}). Su ida y vuelta (sección~\ref{sec:simples}) se
+conserva.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{olas_mar}
+  \caption{El mar con olas visto desde la playa: el muelle y el bote dentro del agua.}
+  \label{fig:olas}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{orilla}
+  \caption{La orilla en dos instantes: el agua se vuelve transparente sobre la arena y la
+  espuma avanza y regresa.}
+  \label{fig:orilla}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{bote_olas}
+  \caption{El bote flotando sobre las olas en cuatro instantes: sube, baja y se inclina con la
+  pendiente del agua.}
+  \label{fig:bote}
+\end{figure}
+
+\subsection{Animaciones simples}
+\label{sec:simples}
+Las diez animaciones simples siguen la idea de la puerta corrediza y la puerta con bisagra de
+la práctica de animación: solo cambian la traslación o la rotación de un objeto con el tiempo.
+Al iniciar, cada objeto animado guarda su posición y su rotación originales; en cada cuadro
+se les suma un desplazamiento o un ángulo. Para los movimientos de ida y vuelta se usa una
+función triangular, que avanza a velocidad constante hasta un largo $L$ y regresa:
+\begin{equation}
+  f(x, L) = \begin{cases} m & m < L \\ 2L - m & m \ge L \end{cases},
+  \qquad m = x \bmod 2L.
+\end{equation}
+La tabla~\ref{tab:simples} resume las diez animaciones (figura~\ref{fig:simples}). Cuando un
+objeto animado también es interactivo (sección~\ref{sec:interaccion}), el usuario mueve su
+posición original y la animación se sigue sumando encima.
+
+\begin{table}[H]
+  \centering
+  \caption{Animaciones simples ($t$ en segundos).}
+  \label{tab:simples}
+  \begin{tabularx}{\linewidth}{l l X}
+    \toprule
+    \textbf{Objeto} & \textbf{Tipo} & \textbf{Movimiento} \\
+    \midrule
+    Frisbee        & Rotación    & Gira $180^\circ$ por segundo \\
+    Estrella de mar & Rotación   & Gira $20^\circ$ por segundo \\
+    Aro salvavidas & Rotación    & Gira $30^\circ$ por segundo \\
+    Globo          & Rotación    & Gira $25^\circ$ por segundo \\
+    Balón de playa & Traslación  & Va y viene 3 m en $x$ a 0.8 m/s \\
+    Bote           & Traslación  & Va y viene 8 m en $x$ a 1.5 m/s (y flota sobre las olas, sección~\ref{sec:olas}) \\
+    Cangrejo       & Traslación  & Camina de lado 1.5 m en $x$ a 0.4 m/s \\
+    Langosta       & Traslación y giro & Va y viene 1.2 m en $z$; al regresar se voltea $180^\circ$ \\
+    Tortuga        & Traslación y giro & Va y viene 1 m en $z$ a 0.15 m/s; se voltea al regresar \\
+    Gato           & Rotación    & Voltea el cuerpo de $-30^\circ$ a $30^\circ$ y regresa \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{animaciones_simples}
+  \caption{Animaciones simples en tres instantes: la estrella de mar gira y el cangrejo camina
+  de lado (arriba); el gato voltea de un lado a otro (abajo).}
+  \label{fig:simples}
+\end{figure}
 
 \subsection{Iluminación y texturizado}
 La escena usa iluminación de Phong \cite{phong1975} con una luz direccional que representa
@@ -428,8 +553,67 @@ generado a partir de la fotografía panorámica \emph{Spiaggia di Mondello} \cit
 rotada para que el sol de la foto coincida con la dirección de la luz de la escena. Los
 personajes animados usan la misma iluminación que el resto de la escena.
 
-\pendiente{segunda técnica de iluminación (por ejemplo, Fresnel para materiales traslúcidos y
-metálicos), materiales opacos, plásticos, traslúcidos y metálicos, y texturizado de la arena.}
+\subsubsection{Materiales}
+\label{sec:materiales}
+Los materiales se distinguen con los dos parámetros del término especular de Phong: la
+intensidad $k_s$ (qué tanto brilla) y el exponente $n$ (qué tan concentrado es el brillo),
+\begin{equation}
+  C_{\text{esp}} = k_s \,\max(\mathbf{v}\cdot\mathbf{r}, 0)^{n}\, C_{\text{sol}}.
+\end{equation}
+Cada objeto busca su material en una lista (\texttt{objectMaterials}); los que no están en ella
+son opacos. Los traslúcidos además dejan ver lo que está detrás: se dibujan al final, después
+de todos los objetos sólidos, mezclando su color con el del fondo con una opacidad fija
+(\texttt{glBlendColor} con \texttt{GL\_CONSTANT\_ALPHA}) y sin escribir en el
+\emph{depth buffer}, para que un traslúcido no oculte a otro. La tabla~\ref{tab:materiales}
+muestra los valores y la figura~\ref{fig:materiales} el resultado.
+
+\begin{table}[H]
+  \centering
+  \caption{Materiales de la escena.}
+  \label{tab:materiales}
+  \begin{tabularx}{\linewidth}{l c c c X}
+    \toprule
+    \textbf{Material} & $k_s$ & $n$ & \textbf{Opacidad} & \textbf{Objetos} \\
+    \midrule
+    Opaco      & 0.25 & 32  & 1    & Todos los demás (arena, madera, personajes, ropa) \\
+    Plástico   & 0.6  & 64  & 1    & Balones, frisbee, hielera, aros salvavidas, bloqueador, bote de basura, cubeta \\
+    Metálico   & 1.0  & 256 & 1    & Termo, lata de refresco, trofeo \\
+    Traslúcido & 0.8  & 128 & 0.45--0.5 & Garrafón y botellas de agua \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{materiales}
+  \caption{Materiales sobre la mesa de jueces: el garrafón y la botella traslúcidos dejan ver
+  la mesa, la lata y el termo metálicos, y la hielera de plástico.}
+  \label{fig:materiales}
+\end{figure}
+
+\subsubsection{Textura de la arena}
+\label{sec:arena}
+Al principio el piso era un plano de un solo color amarillo, y solo la cancha tenía la foto de
+arena. Ahora el piso usa la misma foto, repetida cada $9 \times 6$~m como en la cancha. Las
+coordenadas de textura se calculan a partir de la posición en metros, $(u, v) = (x/9 + 0.5,\;
+z/6)$, para que la arena tenga el mismo tamaño en todo el piso sin importar sus dimensiones.
+
+La foto original no es repetible: en cada repetición se notaba un corte recto. Se probó
+repetirla en espejo (\texttt{GL\_MIRRORED\_REPEAT}), que quita los cortes pero forma dibujos
+simétricos muy visibles. La solución fue generar una versión repetible
+(\texttt{assets/textures/arena\_repetible.jpg}): la foto se mezcla, solo cerca de sus bordes,
+con una copia desplazada media imagen en cada eje; como esa copia sí continúa de un borde al
+otro, el resultado se repite sin cortes (figura~\ref{fig:arena}). El piso quedó 1~cm por debajo
+de la cancha para que no peleen en el \emph{depth buffer}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{arena_piso}
+  \caption{El piso con la textura de arena repetible.}
+  \label{fig:arena}
+\end{figure}
+
+\pendiente{segunda técnica de iluminación.}
 
 \subsection{Modelos y estadísticas}
 La escena tiene 59 objetos colocados que usan 57 modelos distintos (las gradas y las bancas se
@@ -456,16 +640,69 @@ origen de cada modelo, está en \texttt{docs/modelos.md}; la tabla~\ref{tab:mode
 \pendiente{actualizar al llegar a 80 modelos e incluir la tabla completa de estadísticas.}
 
 \subsection{Interacción}
-\pendiente{15 objetos interactivos.}
+\label{sec:interaccion}
+Quince objetos se pueden manipular con el teclado, como el movimiento con flechas y el
+escalamiento de la práctica de transformaciones: frisbee, balón de playa, balón de fútbol,
+aro salvavidas, hielera, termo, garrafón, lata de refresco, botella de agua, bloqueador,
+bote de basura, cubeta, gorra, lentes de sol y sombrilla. La tecla R recorre la lista y el
+objeto seleccionado brilla con el mismo término de emisión que el fuego
+(figura~\ref{fig:seleccion}); el título de la ventana dice cuál está seleccionado. La
+tabla~\ref{tab:interaccion} muestra las acciones.
+
+\begin{table}[H]
+  \centering
+  \caption{Acciones sobre el objeto seleccionado.}
+  \label{tab:interaccion}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Tecla} & \textbf{Acción} \\
+    \midrule
+    R & Seleccionar el siguiente objeto (después del último, ninguno) \\
+    G & Tomar o soltar el objeto (cámara libre): flota 2.5 m frente a la cámara y al soltarlo cae a la arena \\
+    Flechas & Moverlo sobre la arena a 2 m/s \\
+    RePág / AvPág & Subirlo o bajarlo (nunca por debajo de la arena) \\
+    Z / X & Rotarlo $90^\circ$ por segundo \\
+    + / $-$ & Escalarlo poco a poco (entre 1 cm y 10 m de alto) \\
+    Retroceso & Regresarlo a su posición, rotación y tamaño originales \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{seleccion}
+  \caption{La hielera antes y después de seleccionarla con la tecla R.}
+  \label{fig:seleccion}
+\end{figure}
+
+\subsubsection{Partido automático}
+La tecla P inicia un partido de dos contra dos (México y Perú contra Holanda y Japón) que
+reutiliza las animaciones de saque y remate y la física del balón de la
+sección~\ref{sec:tiro}. México saca; mientras el balón vuela, del otro equipo corre hacia él
+la jugadora más cercana, sin salir de su mitad de la cancha, y su compañera regresa a su
+lugar. Cuando el balón baja de 1.6 m en su lado, voltea hacia la red y lo remata de regreso, y
+el turno pasa al otro equipo. Si el balón se queda atorado, por ejemplo en la red, a los
+cinco segundos se sigue jugando. Si el usuario está controlando a un jugador en tercera
+persona, ese jugador no se mueve solo. La figura~\ref{fig:partido} muestra un peloteo.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{partido_automatico}
+  \caption{Partido automático: saque de México, recepción y remate de Holanda, y respuesta de
+  México.}
+  \label{fig:partido}
+\end{figure}
 
 \subsection{Pruebas}
 \label{sec:pruebas}
 Para revisar cada cambio sin abrir la ventana, el programa acepta opciones de línea de
 comandos que dibujan unos cuadros, guardan una captura y terminan:
 \texttt{--captura} (archivo de salida), \texttt{--camara} (posición y orientación),
-\texttt{--tercera} (seguir a un jugador), \texttt{--pose} (fijar una animación en un instante)
-y \texttt{--simular} (ejecutar un saque o remate y adelantar la simulación, imprimiendo la
-trayectoria del balón). Las figuras de este reporte se obtuvieron así.
+\texttt{--tercera} (seguir a un jugador), \texttt{--pose} (fijar una animación en un instante),
+\texttt{--tiempo} (empezar en cierto segundo, para las animaciones que dependen del reloj),
+\texttt{--seleccionar} (empezar con un objeto interactivo seleccionado) y \texttt{--simular}
+(ejecutar un saque, un remate o el partido automático y adelantar la simulación, imprimiendo
+la trayectoria del balón). Las figuras de este reporte se obtuvieron así.
 
 % -----------------------------------------------------------------------------
 \section{Experimentos}
@@ -595,13 +832,13 @@ a los costados, y el muelle, el bote y el faro hacia el mar.
     \midrule
     80 modelos (al menos 80\% originales) & 77 de 80 \\
     2 modelos de cámara & Cumplido \\
-    15 objetos interactivos & Pendiente \\
-    Materiales opacos, plásticos, traslúcidos y metálicos & Pendiente \\
+    15 objetos interactivos & Cumplido \\
+    Materiales opacos, plásticos, traslúcidos y metálicos & Cumplido \\
     2 técnicas de iluminación & 1 de 2 (Phong) \\
     Mapeo de ambiente & Cumplido (\emph{cube map}) \\
-    10 animaciones simples & Pendiente \\
+    10 animaciones simples & Cumplido \\
     5 animaciones por cuadros clave & Cumplido \\
-    5 animaciones procedurales & 3 de 5 \\
+    5 animaciones procedurales & Cumplido \\
     \bottomrule
   \end{tabularx}
 \end{table}

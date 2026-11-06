@@ -86,10 +86,23 @@ Hay dos cámaras; **V** cambia entre ellas.
 | Tecla | Acción |
 |---|---|
 | V | Cambiar de cámara |
+| P | Partido automático 2 contra 2 (MX y PR contra HA y JA) |
 | Tab | Mostrar u ocultar el cursor |
 | M / N | Malla de alambre / relleno |
 | F12 | Captura de pantalla en `docs/capturas/` |
 | Esc | Salir |
+
+**Objetos interactivos** (15; en cualquier cámara)
+
+| Tecla | Acción |
+|---|---|
+| R | Seleccionar el siguiente objeto (el seleccionado brilla) |
+| G | Tomar / soltar el objeto (solo cámara libre) |
+| Flechas | Mover el objeto sobre la arena |
+| RePág / AvPág | Subir / bajar el objeto |
+| Z / X | Rotar el objeto |
+| + / - | Escalar el objeto |
+| Retroceso | Regresar el objeto a como estaba |
 
 ### Agregar un modelo a la escena
 
