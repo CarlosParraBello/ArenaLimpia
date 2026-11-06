@@ -101,7 +101,7 @@ proyecto final de la clase de teoría (equipo C++arnales). No se descargaron de 
 | 68 | Botella de plástico | Carlos Parra | `CarlosParra/BotellaPlastico/BotellaPlastico.blend` | 2 | 770 | 770 | 3 |  | Propio |
 | 69 | Gorra | Carlos Parra | `CarlosParra/Gorra/Gorra.blend` | 3 | 1168 | 1226 | 3 |  | Propio |
 | 70 | Lentes de sol | Carlos Parra | `CarlosParra/LentesSol/LentesSol.blend` | 9 | 2384 | 2230 | 2 |  | Propio |
-| 71 | Botiquín | Rodrigo Uribe | `CarlosParra/Medkit/Medkit.blend` | 5 | 142 | 110 | 0 |  | Original de teoría |
+| 71 | Botiquín | Rodrigo Uribe | `CarlosParra/Medkit/Medkit.blend` | 5 | 142 | 110 | 1 |  | Original de teoría |
 | 72 | Gradas | Rodrigo Uribe | `CarlosParra/Stands/Stands.blend` | 26 | 212 | 156 | 0 |  | Original de teoría |
 | 73 | Cancha de voleibol | Leonardo Ayala y Rodrigo Uribe | `CarlosParra/VolleyballCourt/VolleyballCourt.blend` | 4 | 16 | 4 | 1 |  | Original de teoría |
 | 74 | Balón de voleibol (teoría) | Leonardo Ayala | `CarlosParra/VolleyballBall/VolleyballBall.blend` | 1 | 1224 | 1227 | 0 |  | Original de teoría |
@@ -143,9 +143,11 @@ Se usó el asistente Claude (Anthropic) como apoyo en dos casos:
    pelo y tono de piel distintos, y la niña y el niño tienen otras proporciones.
 2. **Rocas.** Las 9 rocas de `CosasDePlaya.blend` son la misma malla escalada; se registran
    como un solo modelo.
-3. **Sin material.** `Medkit.blend` (las 5 piezas) y la taza
-   y el plato de `PuestoHeladosBanca.blend` no tienen material ni textura; en OpenGL salen
-   grises. `Stands.blend` y `VolleyballBall.blend` solo tienen color, sin imagen.
+3. **Sin material.** La taza y el plato de `PuestoHeladosBanca.blend` no tienen material ni
+   textura; en OpenGL salen grises. `Medkit.blend` tampoco tenía; el 6 de noviembre de 2026 se le
+   agregaron el material `Medkit_Caja` (plástico blanco con la textura `medkit_cruz.png`, una cruz
+   roja proyectada desde arriba sobre el relieve de la tapa) y `Medkit_Esquinas` (rojo) para las
+   cuatro esquinas. `Stands.blend` y `VolleyballBall.blend` solo tienen color, sin imagen.
 4. **Materiales procedurales.** 13 materiales de `PuestoHeladosBanca.blend` (Verde_Texturizado,
    Madera, Azul_Terciopelo, etc.) son procedurales y no tienen imagen. Al exportar a OBJ,
    `tools/exportar_obj.py` usa en su lugar las imágenes `*_Bake.png` de

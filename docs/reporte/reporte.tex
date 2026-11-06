@@ -699,6 +699,22 @@ remo en la arena cerca de la orilla (figura~\ref{fig:mas_elementos}). Sus textur
   \label{fig:mas_elementos}
 \end{figure}
 
+El botiquín de la mesa de jueces (modelo de Rodrigo Uribe para el proyecto de teoría) no traía
+material y en OpenGL se veía gris. Se le agregaron dos materiales: \texttt{Medkit\_Caja}, de
+plástico blanco con una textura de 1024~px generada por script (fondo blanco con grano ligero y
+una cruz roja), y \texttt{Medkit\_Esquinas}, rojo, para las cuatro esquinas. Las coordenadas de
+textura de las caras que miran hacia arriba se calculan con una proyección planar desde arriba,
+$(u, v) = ((x + 1)/2,\; (y + 1)/2)$ en coordenadas locales, para que la cruz quede centrada sobre
+el relieve de la tapa; los costados y el fondo usan una zona blanca de la imagen
+(figura~\ref{fig:botiquin}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{botiquin}
+  \caption{El botiquín con su nuevo material: cuerpo blanco, cruz roja y esquinas rojas.}
+  \label{fig:botiquin}
+\end{figure}
+
 \pendiente{incluir la tabla completa de estadísticas de los 80 modelos.}
 
 \subsection{Interacción}
