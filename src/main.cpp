@@ -198,6 +198,7 @@ struct SceneObject {
     // Animación por piezas: una matriz y una emisión por malla (vacío = modelo rígido)
     std::vector<glm::mat4> parts;
     std::vector<float>     partEmission;
+    std::vector<float>     partFresnel;     // brillo Fresnel en los bordes (llamas)
 };
 
 #define CP(m) "assets/models/CarlosParra/" m "/" m ".obj"
@@ -631,9 +632,11 @@ void drawObject(const SceneObject& obj)
         for (size_t i = 0; i < obj.model->meshes.size(); i++) {
             phongShader->setMat4("model", model * obj.parts[i]);
             phongShader->setFloat("emission", obj.partEmission[i]);
+            phongShader->setFloat("fresnelStrength", obj.partFresnel.empty() ? 0.0f : obj.partFresnel[i]);
             obj.model->meshes[i].Draw(*phongShader);
         }
         phongShader->setFloat("emission", 0.0f);
+        phongShader->setFloat("fresnelStrength", 0.0f);
     }
     else {
         phongShader->setMat4("model", model);
@@ -750,6 +753,7 @@ float flicker(float t, float seed)
 
 // ---------------------------------------------------------------------------
 // Palmera con viento y fuego de la fogata (animaciones procedurales)
+const float FLAME_FRESNEL = 1.2f;   // intensidad del brillo Fresnel en el contorno de las llamas
 //
 // Jerarquía de la palmera:
 //   Palmera -> Tronco (se mece desde la base) -> Hojas (aletean sobre su punto de unión)
@@ -779,6 +783,7 @@ void initPalm()
     SceneObject& o = *palm.obj;
     o.parts.assign(o.model->meshes.size(), glm::mat4(1.0f));
     o.partEmission.assign(o.model->meshes.size(), 0.0f);
+    o.partFresnel.assign(o.model->meshes.size(), 0.0f);
 
     palm.trunk = findMesh(o, "Tronco");
     if (palm.trunk < 0) return;
@@ -814,6 +819,7 @@ void initPalm()
             meshBounds(mesh, mn, mx);
             glm::vec3 base(0.5f * (mn.x + mx.x), mn.y, 0.5f * (mn.z + mx.z));
             palm.flames.push_back({ (int)i, base, 2.3f * (float)palm.flames.size() + 0.5f });
+            o.partFresnel[i] = FLAME_FRESNEL;
         }
     }
     std::cout << "Palmera: " << palm.leaves.size() << " hojas, " << palm.followers.size()

@@ -102,8 +102,8 @@
 Arena Limpia es un sistema gráfico interactivo desarrollado en C++ con OpenGL 3.3 y GLSL que
 representa un torneo de voleibol de playa en una costa. La escena reúne modelos geométricos
 propios y de otros autores colocados a escala real, un mapa de ambiente tipo \emph{cube map}
-obtenido de una fotografía panorámica de playa, iluminación de Phong con una fuente
-direccional, dos modos de cámara (libre y en tercera persona) y tres tipos de animación:
+obtenido de una fotografía panorámica de playa, iluminación de Phong con el sol y con la luz
+puntual de una fogata, efecto Fresnel en las llamas, dos modos de cámara (libre y en tercera persona) y tres tipos de animación:
 animaciones con esqueleto basadas en cuadros clave (caminar, saque, remate, festejo y la señal
 del árbitro), y animaciones procedurales como el tiro parabólico del balón con rebotes y
 choque con la red. El usuario controla a un jugador, camina por la arena y ejecuta las
@@ -201,7 +201,7 @@ simulación (balón, personajes y árbitro) y dibuja la escena (figura~\ref{fig:
     \texttt{src/main.cpp} & Escena, cámaras, entrada, simulación del balón y ciclo principal \\
     \texttt{include/skinnedmodel.h} & Carga de modelos con esqueleto y cálculo de poses \\
     \texttt{include/model.h}, \texttt{mesh.h} & Carga y dibujo de modelos OBJ (base del curso) \\
-    \texttt{shaders/phong.vs}, \texttt{phong.fs} & Iluminación de Phong con el sol \\
+    \texttt{shaders/phong.vs}, \texttt{phong.fs} & Phong con el sol y la fogata; Fresnel en las llamas \\
     \texttt{shaders/phong\_skinning.vs} & Deformación de la malla con los huesos \\
     \texttt{shaders/water.vs}, \texttt{water.fs} & Olas del mar (altura, normal y color del agua) \\
     \texttt{tools/animar\_personajes.py} & Creación y exportación de las animaciones en Blender \\
@@ -613,7 +613,54 @@ de la cancha para que no peleen en el \emph{depth buffer}.
   \label{fig:arena}
 \end{figure}
 
-\pendiente{segunda técnica de iluminación.}
+\subsubsection{Luz puntual de la fogata}
+\label{sec:fogata}
+Además del sol, la fogata es una luz puntual (desarrollada por Hernández Yukioayax). Se coloca
+40~cm arriba de la base de la llama y su intensidad sube y baja con el mismo ruido que hace
+parpadear al fuego. Su aporte difuso y especular se calcula igual que el del sol, pero
+multiplicado por un factor de atenuación que depende de la distancia $d$ al fragmento:
+\begin{equation}
+  f_{att} = \frac{1}{1 + 0.35\,d + 0.44\,d^2}
+\end{equation}
+Así la luz es intensa junto a la fogata y prácticamente desaparece a unos metros. Con la
+tecla L la escena pasa a modo noche: el sol y la luz ambiental bajan al 12\% (también en el
+mar) y la fogata se vuelve tres veces más intensa, de modo que ilumina la arena, las piedras y
+el tronco a su alrededor (figura~\ref{fig:fogata-noche}).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{fogata_dia_noche}
+  \caption{La fogata de día (izquierda) y de noche con la tecla L (derecha): de noche la luz
+    puntual con atenuación ilumina solo los alrededores del fuego.}
+  \label{fig:fogata-noche}
+\end{figure}
+
+\subsubsection{Efecto Fresnel en las llamas}
+\label{sec:fresnel}
+La segunda técnica de iluminación es el efecto Fresnel: una superficie refleja o emite más luz
+cuando se ve de lado (en ángulo rasante) que cuando se ve de frente. Se usa la aproximación de
+Schlick \cite{schlick1994}, con el exponente reducido a 3 para que el efecto abarque más del
+contorno:
+\begin{equation}
+  F = \left(1 - \max(\mathbf{n}\cdot\mathbf{v},\,0)\right)^3
+\end{equation}
+donde $\mathbf{n}$ es la normal y $\mathbf{v}$ la dirección hacia la cámara. En
+\texttt{phong.fs} se suma al color final un brillo $k_F \, F \, \mathbf{c}_{borde}$, donde
+$\mathbf{c}_{borde}$ mezcla el color de la llama con un amarillo $(1, 0.85, 0.3)$ y
+$k_F = 1.2$ (\texttt{FLAME\_FRESNEL}). Solo se activa en las mallas de las llamas
+(\texttt{Fogata\_Fuego}) mediante el \emph{uniform} \texttt{fresnelStrength}; el resto de los
+modelos lo tienen en cero. El resultado es que las caras que se ven de lado se ponen
+naranja-amarillo y el centro de la llama se queda rojo, como si el contorno estuviera más
+caliente (figura~\ref{fig:fresnel}). El mar usa también una aproximación de Fresnel para
+reflejar más cielo a lo lejos (sección de olas del mar).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{fuego_fresnel}
+  \caption{La llama sin Fresnel (izquierda) y con Fresnel (derecha), con la misma cámara y en
+    el mismo instante: las caras laterales se aclaran hacia el naranja.}
+  \label{fig:fresnel}
+\end{figure}
 
 \subsection{Modelos y estadísticas}
 La escena tiene 62 objetos colocados que usan 60 archivos de modelo distintos (las gradas y las bancas se
@@ -849,7 +896,7 @@ a los costados, y el muelle, el bote y el faro hacia el mar.
     2 modelos de cámara & Cumplido \\
     15 objetos interactivos & Cumplido \\
     Materiales opacos, plásticos, traslúcidos y metálicos & Cumplido \\
-    2 técnicas de iluminación & 1 de 2 (Phong) \\
+    2 técnicas de iluminación & Cumplido (Phong y Fresnel) \\
     Mapeo de ambiente & Cumplido (\emph{cube map}) \\
     10 animaciones simples & Cumplido \\
     5 animaciones por cuadros clave & Cumplido \\
@@ -919,6 +966,11 @@ Interface '88} (pp. 26--33). Canadian Information Processing Society.
 \bibitem{mondello}
 Mischok, A. (s.f.). \emph{Spiaggia di Mondello} [Imagen HDRI, licencia CC0]. Poly Haven.
 \url{https://polyhaven.com/a/spiaggia_di_mondello}
+
+\bibitem{schlick1994}
+Schlick, C. (1994). An inexpensive BRDF model for physically-based rendering.
+\emph{Computer Graphics Forum, 13}(3), 233--246.
+\url{https://doi.org/10.1111/1467-8659.1330233}
 
 \bibitem{phong1975}
 Phong, B. T. (1975). Illumination for computer generated pictures. \emph{Communications of

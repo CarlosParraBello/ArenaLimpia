@@ -87,6 +87,7 @@ Hay dos cámaras; **V** cambia entre ellas.
 |---|---|
 | V | Cambiar de cámara |
 | P | Partido automático 2 contra 2 (MX y PR contra HA y JA) |
+| L | Día / noche (de noche se nota la luz de la fogata) |
 | Tab | Mostrar u ocultar el cursor |
 | M / N | Malla de alambre / relleno |
 | F12 | Captura de pantalla en `docs/capturas/` |

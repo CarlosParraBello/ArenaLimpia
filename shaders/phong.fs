@@ -22,6 +22,7 @@ uniform float ambientStrength;
 uniform float specularStrength;
 uniform float shininess;
 uniform float emission;       // 0 = normal; > 0 = la superficie brilla con su propio color (fuego)
+uniform float fresnelStrength; // 0 = sin Fresnel; > 0 = los bordes vistos de lado brillan más (llamas)
 
 // Luz puntual: la fogata (si pointColor es negro no aporta nada)
 uniform vec3  pointPosition;
@@ -57,5 +58,10 @@ void main()
     specular += att * specularStrength * pow(max(dot(v, rp), 0.0), shininess) * pointColor;
 
     vec3 lit = (ambient + diffuse) * base.rgb + specular;
-    FragColor = vec4(lit + emission * base.rgb, base.a);
+    // Fresnel (aproximación de Schlick): el brillo crece cuando la superficie se ve de lado,
+    // así el contorno de la llama se ve más amarillo y caliente que el centro
+    float fresnel = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+    vec3  rim     = fresnelStrength * fresnel * mix(base.rgb, vec3(1.0, 0.85, 0.3), 0.7);
+
+    FragColor = vec4(lit + emission * base.rgb + rim, base.a);
 }
