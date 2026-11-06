@@ -31,12 +31,14 @@
   4. Festejo: jugadores, tecla F
   5. Marcar: árbitro, cada 8 s
   - Extra: Parado (todos los personajes animados, en reposo)
-- [ ] 5 animaciones procedurales (4 de 5):
+- [x] 5 animaciones procedurales:
   1. Tiro parabólico del balón en el saque (Q) y el remate (E): gravedad, rebote en la
      arena, choque con la red, rodar hasta detenerse y giro según la velocidad
   2. Palmera con viento: jerarquía tronco -> hojas/cocos, senos con desfase por hoja
   3. Fuego de la fogata: escala con ruido (suma de senos) y emisión que parpadea
   4. Gaviota volando en círculo (cos/sen del tiempo), sube y baja y mira hacia donde vuela
+  5. Olas del mar: suma de 4 senos en el vertex shader (`shaders/water.vs`), normal exacta por
+     fragmento, espuma en la orilla; el bote flota y se inclina con la misma función en el CPU
 - Extra: partido automático 2 contra 2 (tecla P)
 
 ## Entregables

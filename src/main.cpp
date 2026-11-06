@@ -100,6 +100,8 @@ void initBall();
 void initPalm();
 void initSimpleAnims();
 void initInteraction();
+void initSea();
+void drawSea(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& eye);
 extern float simTime;
 
 // ---------------------------------------------------------------------------
@@ -156,6 +158,7 @@ glm::vec3 sunColor(1.0f, 0.97f, 0.9f);
 Shader* phongShader = nullptr;
 Shader* skinShader = nullptr;   // phong con skinning para personajes animados
 Shader* skyboxShader = nullptr;
+Shader* waterShader = nullptr;
 CubeMap* skybox = nullptr;
 Mesh* ground = nullptr;
 
@@ -503,6 +506,7 @@ bool Start()
     phongShader = new Shader("shaders/phong.vs", "shaders/phong.fs");
     skinShader = new Shader("shaders/phong_skinning.vs", "shaders/phong.fs");
     skyboxShader = new Shader("shaders/skybox.vs", "shaders/skybox.fs");
+    waterShader = new Shader("shaders/water.vs", "shaders/water.fs");
 
     std::vector<std::string> faces = {
         "assets/skybox/mondello/posx.png",
@@ -559,6 +563,7 @@ bool Start()
     initPalm();
     initSimpleAnims();
     initInteraction();
+    initSea();
     setCameraMode(cameraMode);
     return true;
 }
@@ -1029,6 +1034,143 @@ void updateBall(float dt)
 }
 
 // ---------------------------------------------------------------------------
+// Olas del mar (animación procedural)
+//
+// El mar es una cuadrícula en x-z que empieza en la orilla (z = SEA_SHORE_Z) y llega hasta el
+// horizonte. El vertex shader (shaders/water.vs) sube cada vértice con una suma de senos:
+//   h(p, t) = sum_i A_i sin(k_i (d_i . p) - w_i t + phi_i),   w_i = sqrt(g k_i)
+// d_i es la dirección en que viaja la ola (todas hacia la playa, +z), k_i = 2 pi / largo y
+// w_i sale de la relación de dispersión del agua profunda: las olas largas van más rápido.
+// En la orilla las olas desaparecen poco a poco (smoothstep en SEA_SHORE_RAMP metros).
+// La misma función se evalúa aquí en el CPU para que el bote suba, baje y se incline.
+// ---------------------------------------------------------------------------
+struct Wave {
+    glm::vec2 dir;      // hacia donde viaja (se normaliza)
+    float     length;   // largo de onda en metros
+    float     amp;      // amplitud en metros
+    float     phase;
+};
+
+const Wave SEA_WAVES[4] = {
+    { {  0.2f, 1.0f }, 14.0f, 0.12f,  0.0f },
+    { { -0.5f, 1.0f },  7.5f, 0.07f,  1.3f },
+    { {  0.8f, 0.6f },  3.2f, 0.03f,  2.1f },
+    { { -0.7f, 0.7f },  1.4f, 0.012f, 0.4f },
+};
+const float SEA_GRAVITY    = 9.8f;
+const float SEA_SHORE_Z    = -26.0f;   // orilla: el mar está en z < -26
+const float SEA_FAR_Z      = -420.0f;
+const float SEA_HALF_X     = 220.0f;
+const float SEA_SHORE_RAMP = 8.0f;     // metros en los que crecen las olas desde la orilla
+const float SEA_LEVEL      = 0.06f;    // altura del agua en la orilla (arriba de la arena)
+const float SEA_RISE       = 0.24f;    // el nivel sube esto mar adentro
+const float BOAT_DRAFT     = 0.35f;    // qué tanto se hunde el casco
+
+GLuint seaVAO = 0, seaVBO = 0, seaEBO = 0;
+GLsizei seaIndexCount = 0;
+
+float seaShore(float z)
+{
+    return glm::smoothstep(0.0f, SEA_SHORE_RAMP, SEA_SHORE_Z - z);
+}
+
+// Altura del agua y su pendiente (dh/dx, dh/dz) en el punto p = (x, z)
+float seaHeight(glm::vec2 p, float t, glm::vec2* grad = nullptr)
+{
+    float s = seaShore(p.y);
+    float h = 0.0f;
+    glm::vec2 g(0.0f);
+    for (const Wave& w : SEA_WAVES) {
+        glm::vec2 d = glm::normalize(w.dir);
+        float k = 2.0f * glm::pi<float>() / w.length;
+        float arg = k * glm::dot(d, p) - sqrt(SEA_GRAVITY * k) * t + w.phase;
+        h += w.amp * sin(arg);
+        g += w.amp * k * cos(arg) * d;
+    }
+    if (grad) *grad = s * g;
+    return SEA_LEVEL + s * (SEA_RISE + h);
+}
+
+void initSea()
+{
+    // Más filas cerca de la orilla, donde se ve de cerca; más separadas hacia el horizonte
+    const int NX = 221, NZ = 161;
+    std::vector<glm::vec2> verts;
+    verts.reserve(NX * NZ);
+    for (int j = 0; j < NZ; j++) {
+        float t = (float)j / (NZ - 1);
+        float z = SEA_SHORE_Z + (SEA_FAR_Z - SEA_SHORE_Z) * pow(t, 1.6f);
+        for (int i = 0; i < NX; i++)
+            verts.push_back({ -SEA_HALF_X + 2.0f * SEA_HALF_X * i / (NX - 1), z });
+    }
+    std::vector<unsigned int> idx;
+    for (int j = 0; j + 1 < NZ; j++)
+        for (int i = 0; i + 1 < NX; i++) {
+            unsigned int a = j * NX + i, b = a + 1, c = a + NX, d = c + 1;
+            idx.insert(idx.end(), { a, c, b, b, c, d });
+        }
+    seaIndexCount = (GLsizei)idx.size();
+
+    glGenVertexArrays(1, &seaVAO);
+    glGenBuffers(1, &seaVBO);
+    glGenBuffers(1, &seaEBO);
+    glBindVertexArray(seaVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, seaVBO);
+    glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(glm::vec2), verts.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, seaEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(unsigned int), idx.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+    glBindVertexArray(0);
+}
+
+// El bote flota: su altura es la del agua y se inclina con la pendiente de la ola
+void updateSea(float t)
+{
+    SceneObject* boat = findObject("Bote");
+    if (!boat) return;
+    glm::vec2 grad;
+    glm::vec2 p(boat->position.x, boat->position.z);
+    boat->position.y = seaHeight(p, t, &grad) - BOAT_DRAFT;
+
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    glm::vec3 n = glm::normalize(glm::vec3(-grad.x, 1.0f, -grad.y));
+    glm::vec3 axis = glm::cross(up, n);
+    glm::mat4 tilt(1.0f);
+    if (glm::length(axis) > 1e-5f)
+        tilt = glm::rotate(glm::mat4(1.0f), acos(glm::clamp(n.y, -1.0f, 1.0f)), glm::normalize(axis));
+    // objectMatrix aplica spin después de rotationY; así la inclinación queda en ejes del mundo
+    glm::mat4 ry = glm::rotate(glm::mat4(1.0f), glm::radians(boat->rotationY), up);
+    boat->spin = glm::inverse(ry) * tilt * ry;
+}
+
+void drawSea(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& eye)
+{
+    if (!seaVAO) return;
+    waterShader->use();
+    waterShader->setMat4("projection", projection);
+    waterShader->setMat4("view", view);
+    waterShader->setVec3("viewPos", eye);
+    waterShader->setVec3("sunDirection", sunDirection);
+    waterShader->setVec3("sunColor", sunColor);
+    waterShader->setFloat("waveTime", simTime);
+    waterShader->setFloat("gravity", SEA_GRAVITY);
+    waterShader->setFloat("shoreZ", SEA_SHORE_Z);
+    waterShader->setFloat("shoreRamp", SEA_SHORE_RAMP);
+    waterShader->setFloat("seaLevel", SEA_LEVEL);
+    waterShader->setFloat("seaRise", SEA_RISE);
+    for (int i = 0; i < 4; i++) {
+        const Wave& w = SEA_WAVES[i];
+        std::string n = "[" + std::to_string(i) + "]";
+        waterShader->setVec2("waveDir" + n, glm::normalize(w.dir));
+        waterShader->setVec3("waveParam" + n, glm::vec3(2.0f * glm::pi<float>() / w.length, w.amp, w.phase));
+    }
+    glBindVertexArray(seaVAO);
+    glDrawElements(GL_TRIANGLES, seaIndexCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
+// ---------------------------------------------------------------------------
 // Animaciones simples (10)
 //
 // Como la puerta corrediza y la puerta con bisagra de la práctica 9: solo se cambia la
@@ -1417,6 +1559,7 @@ void stepSimulation(float dt)
     simTime += dt;
     updatePalm(simTime);
     updateSimpleAnims(simTime);
+    updateSea(simTime);
     updateAutoMatch(dt);
     updateBall(dt);
     for (SceneObject& obj : sceneObjects)
@@ -1606,6 +1749,10 @@ bool Update()
         if (!isTranslucent(obj))
             drawObject(obj);
 
+    // Mar: después de los sólidos para que se vea la arena y los postes del muelle debajo
+    drawSea(projection, view, eye);
+    phongShader->use();
+
     glDepthMask(GL_FALSE);
     glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
     for (const SceneObject& obj : sceneObjects) {
@@ -1644,6 +1791,10 @@ void Shutdown()
     delete skybox;
     delete phongShader;
     delete skyboxShader;
+    delete waterShader;
+    glDeleteVertexArrays(1, &seaVAO);
+    glDeleteBuffers(1, &seaVBO);
+    glDeleteBuffers(1, &seaEBO);
 }
 
 // ---------------------------------------------------------------------------

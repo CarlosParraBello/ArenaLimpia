@@ -110,6 +110,8 @@
     <None Include="shaders\phong.vs" />
     <None Include="shaders\phong.fs" />
     <None Include="shaders\phong_skinning.vs" />
+    <None Include="shaders\water.vs" />
+    <None Include="shaders\water.fs" />
     <None Include="shaders\skybox.vs" />
     <None Include="shaders\skybox.fs" />
   </ItemGroup>

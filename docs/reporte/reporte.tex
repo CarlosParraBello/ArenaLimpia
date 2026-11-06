@@ -203,6 +203,7 @@ simulación (balón, personajes y árbitro) y dibuja la escena (figura~\ref{fig:
     \texttt{include/model.h}, \texttt{mesh.h} & Carga y dibujo de modelos OBJ (base del curso) \\
     \texttt{shaders/phong.vs}, \texttt{phong.fs} & Iluminación de Phong con el sol \\
     \texttt{shaders/phong\_skinning.vs} & Deformación de la malla con los huesos \\
+    \texttt{shaders/water.vs}, \texttt{water.fs} & Olas del mar (altura, normal y color del agua) \\
     \texttt{tools/animar\_personajes.py} & Creación y exportación de las animaciones en Blender \\
     \texttt{tools/exportar\_obj.py} & Exportación de modelos de Blender a OBJ \\
     \bottomrule
@@ -440,7 +441,65 @@ círculo, $\psi(t) = \operatorname{atan2}(-\sin\omega t, \cos\omega t)$
   \label{fig:gaviota}
 \end{figure}
 
-\pendiente{documentar la quinta animación procedural.}
+\subsubsection{Olas del mar}
+\label{sec:olas}
+El mar es una cuadrícula de $221 \times 161$ vértices que empieza en la orilla ($z = -26$~m) y
+llega hasta el horizonte ($z = -420$~m); las filas están más juntas cerca de la orilla, donde
+se ven de cerca. En cada cuadro el \emph{vertex shader} (\texttt{shaders/water.vs}) calcula la
+altura de cada vértice con una suma de cuatro senos que viajan hacia la playa:
+\begin{equation}
+  h(\mathbf{p}, t) = \sum_{i=1}^{4} A_i \sin\!\left(k_i\, \mathbf{d}_i\cdot\mathbf{p}
+    - \omega_i t + \varphi_i\right),
+  \qquad k_i = \frac{2\pi}{\lambda_i},\quad \omega_i = \sqrt{g\, k_i},
+\end{equation}
+donde $\mathbf{p} = (x, z)$, $\mathbf{d}_i$ es la dirección de la ola y $\omega_i$ sale de la
+relación de dispersión del agua profunda, así que las olas largas avanzan más rápido que las
+cortas, como en el mar real. Las ondas usadas tienen largos de 14, 7.5, 3.2 y 1.4~m y
+amplitudes de 12, 7, 3 y 1.2~cm. Para que las olas no choquen de golpe con la arena, la altura
+se multiplica por un factor $s = \operatorname{smoothstep}(0, 8, z_{\text{orilla}} - z)$ que vale
+cero en la orilla y uno a ocho metros mar adentro.
+
+La normal no se toma de la cuadrícula sino que se calcula en cada fragmento con la derivada
+exacta de la suma,
+\begin{equation}
+  \nabla h = \sum_{i} A_i k_i \cos\!\left(k_i\, \mathbf{d}_i\cdot\mathbf{p} - \omega_i t
+    + \varphi_i\right) \mathbf{d}_i,
+  \qquad \mathbf{n} = \operatorname{normalize}\!\left(-\tfrac{\partial h}{\partial x},\, 1,\,
+    -\tfrac{\partial h}{\partial z}\right),
+\end{equation}
+de modo que los reflejos del sol se ven detallados aunque los vértices estén separados. El
+color pasa de turquesa en la orilla a azul profundo mar adentro, refleja más el cielo en los
+ángulos rasantes (aproximación de Fresnel, $(1 - \mathbf{n}\cdot\mathbf{v})^4$), se vuelve
+transparente en los primeros dos metros para que se vea la arena y tiene una franja de espuma
+que avanza y regresa (figuras~\ref{fig:olas} y~\ref{fig:orilla}).
+
+La misma función se evalúa en el CPU para el bote: en cada cuadro su altura es la del agua en su
+posición menos lo que se hunde el casco (35~cm), y se inclina para que su eje vertical coincida
+con la normal de la ola (figura~\ref{fig:bote}). Su ida y vuelta (sección~\ref{sec:simples}) se
+conserva.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{olas_mar}
+  \caption{El mar con olas visto desde la playa: el muelle y el bote dentro del agua.}
+  \label{fig:olas}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{orilla}
+  \caption{La orilla en dos instantes: el agua se vuelve transparente sobre la arena y la
+  espuma avanza y regresa.}
+  \label{fig:orilla}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{bote_olas}
+  \caption{El bote flotando sobre las olas en cuatro instantes: sube, baja y se inclina con la
+  pendiente del agua.}
+  \label{fig:bote}
+\end{figure}
 
 \subsection{Animaciones simples}
 \label{sec:simples}
@@ -470,7 +529,7 @@ posición original y la animación se sigue sumando encima.
     Aro salvavidas & Rotación    & Gira $30^\circ$ por segundo \\
     Globo          & Rotación    & Gira $25^\circ$ por segundo \\
     Balón de playa & Traslación  & Va y viene 3 m en $x$ a 0.8 m/s \\
-    Bote           & Traslación  & Va y viene 8 m en $x$ a 1.5 m/s \\
+    Bote           & Traslación  & Va y viene 8 m en $x$ a 1.5 m/s (y flota sobre las olas, sección~\ref{sec:olas}) \\
     Cangrejo       & Traslación  & Camina de lado 1.5 m en $x$ a 0.4 m/s \\
     Langosta       & Traslación y giro & Va y viene 1.2 m en $z$; al regresar se voltea $180^\circ$ \\
     Tortuga        & Traslación y giro & Va y viene 1 m en $z$ a 0.15 m/s; se voltea al regresar \\
@@ -757,7 +816,7 @@ a los costados, y el muelle, el bote y el faro hacia el mar.
     Mapeo de ambiente & Cumplido (\emph{cube map}) \\
     10 animaciones simples & Cumplido \\
     5 animaciones por cuadros clave & Cumplido \\
-    5 animaciones procedurales & 4 de 5 \\
+    5 animaciones procedurales & Cumplido \\
     \bottomrule
   \end{tabularx}
 \end{table}
