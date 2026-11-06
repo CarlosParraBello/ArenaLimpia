@@ -591,7 +591,29 @@ muestra los valores y la figura~\ref{fig:materiales} el resultado.
   \label{fig:materiales}
 \end{figure}
 
-\pendiente{segunda técnica de iluminación y texturizado de la arena.}
+\subsubsection{Textura de la arena}
+\label{sec:arena}
+Al principio el piso era un plano de un solo color amarillo, y solo la cancha tenía la foto de
+arena. Ahora el piso usa la misma foto, repetida cada $9 \times 6$~m como en la cancha. Las
+coordenadas de textura se calculan a partir de la posición en metros, $(u, v) = (x/9 + 0.5,\;
+z/6)$, para que la arena tenga el mismo tamaño en todo el piso sin importar sus dimensiones.
+
+La foto original no es repetible: en cada repetición se notaba un corte recto. Se probó
+repetirla en espejo (\texttt{GL\_MIRRORED\_REPEAT}), que quita los cortes pero forma dibujos
+simétricos muy visibles. La solución fue generar una versión repetible
+(\texttt{assets/textures/arena\_repetible.jpg}): la foto se mezcla, solo cerca de sus bordes,
+con una copia desplazada media imagen en cada eje; como esa copia sí continúa de un borde al
+otro, el resultado se repite sin cortes (figura~\ref{fig:arena}). El piso quedó 1~cm por debajo
+de la cancha para que no peleen en el \emph{depth buffer}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{arena_piso}
+  \caption{El piso con la textura de arena repetible.}
+  \label{fig:arena}
+\end{figure}
+
+\pendiente{segunda técnica de iluminación.}
 
 \subsection{Modelos y estadísticas}
 La escena tiene 59 objetos colocados que usan 57 modelos distintos (las gradas y las bancas se

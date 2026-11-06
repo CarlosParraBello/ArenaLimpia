@@ -428,26 +428,36 @@ bool findAssetsRoot()
     return false;
 }
 
-// Crea un plano cuadrado en y = 0 usando la clase Mesh del curso.
-Mesh* createGround(float halfSize, glm::vec4 color)
+// Crea el piso de arena: un plano cuadrado usando la clase Mesh del curso, con la misma arena
+// que la cancha. La foto original no es repetible (se notan cortes en cada repetición), así que
+// se usa assets/textures/arena_repetible.jpg: la foto mezclada cerca de los bordes con una
+// copia desplazada media imagen, para que el borde derecho continúe en el izquierdo. Las coordenadas UV salen de la posición en metros (una repetición de
+// la textura cada tile.x por tile.y metros, igual que en la cancha), así se repite sin estirarse.
+// Queda 1 cm abajo de y = 0 para no pelear en profundidad con los planos de la cancha.
+const float GROUND_Y = -0.01f;
+
+Mesh* createGround(float halfSize, glm::vec2 tile, const std::string& texDir, const char* texFile)
 {
     std::vector<Vertex> vertices(4);
     glm::vec3 corners[4] = {
         { -halfSize, 0.0f, -halfSize }, { halfSize, 0.0f, -halfSize },
         {  halfSize, 0.0f,  halfSize }, { -halfSize, 0.0f,  halfSize }
     };
-    glm::vec2 uvs[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
     for (int i = 0; i < 4; ++i) {
         Vertex v{};
-        v.Position = corners[i];
+        v.Position = corners[i] + glm::vec3(0.0f, GROUND_Y, 0.0f);
         v.Normal = glm::vec3(0.0f, 1.0f, 0.0f);
-        v.TexCoords = uvs[i];
+        v.TexCoords = glm::vec2(corners[i].x / tile.x + 0.5f, corners[i].z / tile.y);
         v.Tangent = glm::vec3(1.0f, 0.0f, 0.0f);
         v.Bitangent = glm::vec3(0.0f, 0.0f, 1.0f);
         vertices[i] = v;
     }
     std::vector<unsigned int> indices = { 0, 2, 1, 0, 3, 2 };
-    return new Mesh(vertices, indices, {}, color);
+    Texture sand;
+    sand.id = TextureFromFile(texFile, texDir);
+    sand.type = "texture_diffuse";
+    sand.path = texFile;
+    return new Mesh(vertices, indices, { sand }, glm::vec4(1.0f));
 }
 
 void computeBounds(SceneObject& obj)
@@ -519,7 +529,8 @@ bool Start()
     skybox = new CubeMap();
     skybox->loadCubemap(faces);
 
-    ground = createGround(60.0f, glm::vec4(0.86f, 0.76f, 0.57f, 1.0f));
+    ground = createGround(60.0f, glm::vec2(9.0f, 6.0f),
+                          "assets/textures", "arena_repetible.jpg");
 
     // Un modelo usado varias veces (por ejemplo, las gradas) se carga una sola vez.
     std::map<std::string, Model*> loaded;

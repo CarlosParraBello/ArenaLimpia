@@ -17,7 +17,7 @@
 - [ ] 2 técnicas de iluminación
 - [x] 1 mapeo de ambiente (skybox/cubemap): `assets/skybox/mondello/`
 - [ ] Texturizado de modelos
-- [ ] Texturizado de ambiente
+- [x] Texturizado de ambiente: arena del piso (`assets/textures/arena_repetible.jpg`, repetible) y mar con olas
 
 ## Animaciones
 
