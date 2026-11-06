@@ -46,6 +46,8 @@
 *   --tercera [1-4]           empieza en tercera persona siguiendo a ese jugador
 *   --tiempo <s>              empieza la simulación en el segundo s (viento, fuego)
 *   --simular <Saque|Remate> <s>  el jugador seguido hace la acción y se adelantan s segundos
+*   --simular Partido <s>     inicia el partido automático y adelanta s segundos
+*   --seleccionar <objeto>    empieza con ese objeto interactivo seleccionado
 *   --pose <anim> <s>         fija la animación <anim> en el segundo s en los personajes que la tengan
 */
 
@@ -93,6 +95,7 @@ enum class CameraMode;
 void setCameraMode(CameraMode mode);
 bool saveScreenshot(const std::string& path);
 void runSimulationTest();
+void toggleAutoMatch();
 void initBall();
 void initPalm();
 void initSimpleAnims();
@@ -337,6 +340,7 @@ bool isSelected(const SceneObject& obj);
 std::string capturePath;
 std::string simulateAction;      // --simular <Saque|Remate> <s>: adelanta la simulación (pruebas)
 float simulateSeconds = 0.0f;
+std::string selectArg;           // --seleccionar <objeto>: empieza con ese objeto seleccionado
 std::string forcedAnim;          // --pose <anim> <s>: fija una animación (para capturas)
 float forcedAnimTime = 0.0f;
 int frameCount = 0;
@@ -355,6 +359,8 @@ int main(int argc, char** argv)
             camera.ProcessMouseMovement(0.0f, 0.0f);   // recalcula los vectores de la cámara
             i += 5;
         }
+        else if (arg == "--seleccionar" && i + 1 < argc)
+            selectArg = argv[++i];
         else if (arg == "--tiempo" && i + 1 < argc)
             simTime = std::stof(argv[++i]);
         else if (arg == "--simular" && i + 2 < argc) {
@@ -1164,6 +1170,8 @@ void initInteraction()
             originalPoses.push_back({ glm::vec3(0.0f), 0.0f });
             originalHeights.push_back(0.0f);
         }
+        if (selectArg == INTERACTIVE_NAMES[i])
+            selectedIndex = i;
     }
 }
 
@@ -1416,22 +1424,30 @@ void stepSimulation(float dt)
     updateReferee(dt);
 }
 
-// --simular: el jugador seguido hace la acción y se adelanta la simulación (para capturas)
+// --simular: el jugador seguido hace la acción (o empieza el partido automático) y se adelanta
+// la simulación (para capturas)
 void runSimulationTest()
 {
-    SceneObject* player = findObject(PLAYER_NAMES[followedPlayer]);
-    if (!player) return;
-    const ShotDef& shot = (simulateAction == "Remate") ? SHOT_REMATE : SHOT_SAQUE;
-    if (!playOneShot(*player, shot.anim)) return;
-    startShot(*player, shot);
     const float dt = 1.0f / 120.0f;
+    if (simulateAction == "Partido") {
+        toggleAutoMatch();
+    } else {
+        SceneObject* player = findObject(PLAYER_NAMES[followedPlayer]);
+        if (!player) return;
+        const ShotDef& shot = (simulateAction == "Remate") ? SHOT_REMATE : SHOT_SAQUE;
+        if (!playOneShot(*player, shot.anim)) return;
+        startShot(*player, shot);
+    }
+    deltaTime = dt;
     int steps = (int)(simulateSeconds / dt);
     for (int i = 0; i <= steps; i++) {
         if (i % 12 == 0)
             printf("t=%.2f balon=(%.2f, %.2f, %.2f) estado=%d\n", i * dt,
                 ball.pos.x, ball.pos.y, ball.pos.z, (int)ball.state);
-        if (i < steps)
+        if (i < steps) {
+            for (SceneObject& obj : sceneObjects) obj.speed = 0.0f;
             stepSimulation(dt);
+        }
     }
     lastFrame = (float)glfwGetTime();
 }
